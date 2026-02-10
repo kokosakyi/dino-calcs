@@ -51,7 +51,7 @@ export function ResultCard({ result, rank, isSelected, onSelect, steelGrade, lat
         </div>
         <div className="property">
           <span className="label">
-            <MathJax inline>{`\\(${modulusLabel}\\)`}</MathJax>
+            <MathJax dynamic inline>{`\\(${modulusLabel}\\)`}</MathJax>
           </span>
           <span className="value">{modulusValue} ×10³ mm³</span>
         </div>
@@ -66,7 +66,7 @@ export function ResultCard({ result, rank, isSelected, onSelect, steelGrade, lat
       <div className="resistance-values">
         <div className="resistance">
           <div className="resistance-label">
-            <MathJax inline>{"\\(M_r\\)"}</MathJax>
+            <MathJax dynamic inline>{"\\(M_r\\)"}</MathJax>
           </div>
           <div className="resistance-value">{formatNumber(Mr)} kN·m</div>
           <div className={`utilization-bar ${getUtilizationColor(momentUtilization)}`}>
@@ -80,7 +80,7 @@ export function ResultCard({ result, rank, isSelected, onSelect, steelGrade, lat
 
         <div className="resistance">
           <div className="resistance-label">
-            <MathJax inline>{"\\(V_r\\)"}</MathJax>
+            <MathJax dynamic inline>{"\\(V_r\\)"}</MathJax>
           </div>
           <div className="resistance-value">{formatNumber(Vr)} kN</div>
           <div className={`utilization-bar ${getUtilizationColor(shearUtilization)}`}>
@@ -95,7 +95,7 @@ export function ResultCard({ result, rank, isSelected, onSelect, steelGrade, lat
         {deflectionUtilization !== undefined && (
           <div className="resistance">
             <div className="resistance-label">
-              <MathJax inline>{"\\(I_x\\)"}</MathJax>
+              <MathJax dynamic inline>{"\\(I_x\\)"}</MathJax>
             </div>
             <div className="resistance-value">{section.Ix} ×10⁶ mm⁴</div>
             <div className={`utilization-bar ${getUtilizationColor(deflectionUtilization)}`}>
