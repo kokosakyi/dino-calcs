@@ -9,7 +9,7 @@ export function Layout() {
       <nav className="sidebar">
         <div className="sidebar-header">
           <div className="logo">
-            <h1>StructCalc</h1>
+            <h1>Dino Calcs</h1>
             <span className="tagline">Structural Analysis</span>
           </div>
           <button
