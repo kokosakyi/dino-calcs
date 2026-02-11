@@ -3,6 +3,7 @@ import { MathJax } from 'better-react-mathjax';
 import { InputField } from '../components/InputField';
 import { ResultCard } from '../components/ResultCard';
 import { DesignSummary } from '../components/DesignSummary';
+import { CustomDropdown } from '../components/CustomDropdown';
 import { findOptimalSection, calculateSimplySupported, calculateRequiredIx, calculateNBCCombinations } from '../utils/steelDesign';
 import type { WSection, SteelGrade, DesignResult, LateralSupportType, SectionFilters, BeamDesignMode, DeflectionResult, NBCCombinationResult } from '../types/steel';
 import wSections from '../data/W_Section.json';
@@ -200,17 +201,16 @@ export function BeamDesign() {
                 min={0}
                 step={1}
               />
-              <div className="input-field">
-                <label>Deflection Limit (L/x)</label>
-                <select
-                  value={deflectionLimit}
-                  onChange={(e) => setDeflectionLimit(Number(e.target.value) as 240 | 300 | 360)}
-                >
-                  <option value={360}>L/360 (floors with brittle finishes)</option>
-                  <option value={300}>L/300 (general floors)</option>
-                  <option value={240}>L/240 (roofs)</option>
-                </select>
-              </div>
+              <CustomDropdown
+                label="Deflection Limit (L/x)"
+                options={[
+                  { id: '360', label: 'L/360', sublabel: 'floors with brittle finishes' },
+                  { id: '300', label: 'L/300', sublabel: 'general floors' },
+                  { id: '240', label: 'L/240', sublabel: 'roofs' },
+                ]}
+                value={String(deflectionLimit)}
+                onChange={(v) => setDeflectionLimit(Number(v) as 240 | 300 | 360)}
+              />
             </div>
           )}
 
@@ -226,17 +226,16 @@ export function BeamDesign() {
                 min={0}
                 step={100}
               />
-              <div className="input-field">
-                <label>Deflection Limit (L/x)</label>
-                <select
-                  value={deflectionLimit}
-                  onChange={(e) => setDeflectionLimit(Number(e.target.value) as 240 | 300 | 360)}
-                >
-                  <option value={360}>L/360 (floors with brittle finishes)</option>
-                  <option value={300}>L/300 (general floors)</option>
-                  <option value={240}>L/240 (roofs)</option>
-                </select>
-              </div>
+              <CustomDropdown
+                label="Deflection Limit (L/x)"
+                options={[
+                  { id: '360', label: 'L/360', sublabel: 'floors with brittle finishes' },
+                  { id: '300', label: 'L/300', sublabel: 'general floors' },
+                  { id: '240', label: 'L/240', sublabel: 'roofs' },
+                ]}
+                value={String(deflectionLimit)}
+                onChange={(v) => setDeflectionLimit(Number(v) as 240 | 300 | 360)}
+              />
               <h3>Unfactored Loads (kN/m)</h3>
               <InputField
                 label="Dead Load (D)"
@@ -283,31 +282,29 @@ export function BeamDesign() {
 
           <div className="input-group">
             <h3>Material</h3>
-            <div className="input-field">
-              <label>Steel Grade</label>
-              <select
-                value={steelGrade}
-                onChange={(e) => setSteelGrade(e.target.value as SteelGrade)}
-              >
-                <option value="300W">CSA G40.21 300W (Fy = 300 MPa)</option>
-                <option value="350W">CSA G40.21 350W (Fy = 350 MPa)</option>
-                <option value="345W">ASTM A992 (Fy = 345 MPa)</option>
-              </select>
-            </div>
+            <CustomDropdown
+              label="Steel Grade"
+              options={[
+                { id: '300W', label: 'CSA G40.21 300W', sublabel: 'Fy = 300 MPa' },
+                { id: '350W', label: 'CSA G40.21 350W', sublabel: 'Fy = 350 MPa' },
+                { id: '345W', label: 'ASTM A992', sublabel: 'Fy = 345 MPa' },
+              ]}
+              value={steelGrade}
+              onChange={(v) => setSteelGrade(v as SteelGrade)}
+            />
           </div>
 
           <div className="input-group">
             <h3>Lateral Support</h3>
-            <div className="input-field">
-              <label>Compression Flange Support</label>
-              <select
-                value={lateralSupport}
-                onChange={(e) => setLateralSupport(e.target.value as LateralSupportType)}
-              >
-                <option value="continuous">Continuous Lateral Support</option>
-                <option value="unsupported">Laterally Unsupported</option>
-              </select>
-            </div>
+            <CustomDropdown
+              label="Compression Flange Support"
+              options={[
+                { id: 'continuous', label: 'Continuous Lateral Support' },
+                { id: 'unsupported', label: 'Laterally Unsupported' },
+              ]}
+              value={lateralSupport}
+              onChange={(v) => setLateralSupport(v as LateralSupportType)}
+            />
 
             {lateralSupport === 'unsupported' && (
               <>

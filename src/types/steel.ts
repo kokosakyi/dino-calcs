@@ -37,6 +37,117 @@ export interface WSection {
   Wt_i: string;     // Imperial weight (lb/ft)
 }
 
+// Generic section interface for all section types
+export interface GenericSection {
+  // Common properties (all sections)
+  Prp?: string;     // Preferred section indicator
+  Dsg: string;      // Designation
+  Avl?: string;     // Availability
+  Shp?: string;     // Shape type
+  Grp?: string;     // Group
+  Use?: string;     // Usage code
+  Mass: string;     // Mass (kg/m)
+  A: string;        // Area (mm²)
+  SA?: string;      // Surface area per meter (m²/m)
+  Ds_i: string;     // Imperial designation
+  Dn_i?: string;    // Imperial nominal depth
+  Wt_i?: string;    // Imperial weight (lb/ft)
+  
+  // Dimensions
+  D?: string;       // Depth (mm)
+  B?: string;       // Width (mm)
+  T?: string;       // Thickness (mm)
+  W?: string;       // Web thickness (mm)
+  K?: string;       // k dimension (mm)
+  K1?: string;      // k1 dimension (mm)
+  Dnom?: string;    // Nominal depth (mm)
+  
+  // Slenderness ratios
+  BT?: string;      // b/t ratio
+  HW?: string;      // h/w ratio
+  DT?: string;      // d/t ratio
+  
+  // Strong axis properties
+  Ix?: string;      // Moment of inertia about x-axis
+  Sx?: string;      // Elastic section modulus about x-axis
+  Rx?: string;      // Radius of gyration about x-axis
+  Zx?: string;      // Plastic section modulus about x-axis
+  
+  // Weak axis properties
+  Iy?: string;      // Moment of inertia about y-axis
+  Sy?: string;      // Elastic section modulus about y-axis
+  Ry?: string;      // Radius of gyration about y-axis
+  Zy?: string;      // Plastic section modulus about y-axis
+  
+  // Torsional properties
+  J?: string;       // Torsional constant
+  Cw?: string;      // Warping constant
+  Wn?: string;      // Normalized warping function
+  Sw?: string;      // Statical moment
+  
+  // Shear properties
+  Qf?: string;      // First moment of flange
+  Qw?: string;      // First moment of web
+  
+  // Angle-specific properties
+  X?: string;       // Centroid X location
+  Y?: string;       // Centroid Y location
+  Ixy?: string;     // Product of inertia
+  TanA?: string;    // Tangent of principal axis angle
+  Rop?: string;     // Polar radius of gyration
+  Rxp?: string;     // Radius of gyration about principal x-axis
+  Ryp?: string;     // Radius of gyration about principal y-axis
+  Omeg?: string;    // Omega factor
+  Xop?: string;     // Shear center X
+  Yop?: string;     // Shear center Y
+  
+  // HSS-specific properties
+  Tdes?: string;    // Design wall thickness
+  RI?: string;      // Inside corner radius
+  RO?: string;      // Outside corner radius
+  Crt?: string;     // Critical stress
+  C?: string;       // Torsional constant for HSS
+  
+  // Channel-specific properties
+  Xo?: string;      // Shear center location
+  T1?: string;      // Toe thickness 1
+  T2?: string;      // Toe thickness 2
+  Slp?: string;     // Flange slope
+  
+  // Tee-specific properties
+  Yo?: string;      // Centroid Y location
+  BetX?: string;    // Beta factor
+  
+  // Allow any additional properties
+  [key: string]: string | undefined;
+}
+
+// Section category configuration
+export interface SectionCategory {
+  id: string;
+  name: string;
+  prefix: string;
+  description: string;
+}
+
+export const SECTION_CATEGORIES: SectionCategory[] = [
+  { id: 'W', name: 'W-Sections', prefix: 'W', description: 'Wide Flange Sections' },
+  { id: 'C', name: 'C-Sections', prefix: 'C', description: 'Channel Sections' },
+  { id: 'MC', name: 'MC-Sections', prefix: 'MC', description: 'Miscellaneous Channels' },
+  { id: 'L', name: 'L-Sections', prefix: 'L', description: 'Angle Sections (Single)' },
+  { id: '2L', name: '2L-Sections', prefix: '2L', description: 'Double Angle Sections' },
+  { id: 'S', name: 'S-Sections', prefix: 'S', description: 'American Standard Beams' },
+  { id: 'M', name: 'M-Sections', prefix: 'M', description: 'Miscellaneous Beams' },
+  { id: 'HP', name: 'HP-Sections', prefix: 'HP', description: 'H-Pile Sections' },
+  { id: 'WT', name: 'WT-Sections', prefix: 'WT', description: 'Structural Tees (cut from W)' },
+  { id: 'WWT', name: 'WWT-Sections', prefix: 'WWT', description: 'Welded Wide Flange Tees' },
+  { id: 'WWF', name: 'WWF-Sections', prefix: 'WWF', description: 'Welded Wide Flange' },
+  { id: 'WRF', name: 'WRF-Sections', prefix: 'WRF', description: 'Welded Reduced Flange' },
+  { id: 'SLB', name: 'SLB-Sections', prefix: 'SLB', description: 'Slender Beams' },
+  { id: 'HSS-A500', name: 'HSS (A500)', prefix: 'H', description: 'Hollow Structural Sections (ASTM A500)' },
+  { id: 'HSS-G40', name: 'HSS (G40)', prefix: 'H', description: 'Hollow Structural Sections (CSA G40)' },
+];
+
 export interface SectionFilters {
   minFlangeWidth?: number;      // Minimum flange width (mm)
   minFlangeThickness?: number;  // Minimum flange thickness (mm)
