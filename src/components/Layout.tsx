@@ -39,6 +39,12 @@ export function Layout() {
                 Beam Design
               </li>
             </NavLink>
+            <NavLink to="/steel/section-capacity" className={({ isActive }) => isActive ? 'active' : ''}>
+              <li>
+                <span className="nav-icon">⊠</span>
+                Section Capacity
+              </li>
+            </NavLink>
             <NavLink to="/steel/section-browser" className={({ isActive }) => isActive ? 'active' : ''}>
               <li>
                 <span className="nav-icon">▤</span>

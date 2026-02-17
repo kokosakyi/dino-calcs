@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 
 export interface DropdownOption {
   id: string;
@@ -12,6 +12,7 @@ interface CustomDropdownProps {
   onChange: (value: string) => void;
   label: string;
   className?: string;
+  searchable?: boolean;
 }
 
 export function CustomDropdown({
@@ -19,23 +20,44 @@ export function CustomDropdown({
   value,
   onChange,
   label,
-  className = ''
+  className = '',
+  searchable = false
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const selectedOption = options.find(opt => opt.id === value);
+
+  // Filter options based on search term
+  const filteredOptions = useMemo(() => {
+    if (!searchable || !searchTerm) return options;
+    const term = searchTerm.toLowerCase();
+    return options.filter(opt => 
+      opt.label.toLowerCase().includes(term) ||
+      (opt.sublabel && opt.sublabel.toLowerCase().includes(term))
+    );
+  }, [options, searchTerm, searchable]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setSearchTerm('');
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isOpen && searchable && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isOpen, searchable]);
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -81,29 +103,55 @@ export function CustomDropdown({
         
         {isOpen && (
           <div className="dropdown-menu" role="listbox">
-            {options.map(option => (
-              <div
-                key={option.id}
-                className={`dropdown-option ${option.id === value ? 'selected' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange(option.id);
-                  setIsOpen(false);
-                }}
-                role="option"
-                aria-selected={option.id === value}
-              >
-                <span className="option-label">{option.label}</span>
-                {option.sublabel && (
-                  <span className="option-sublabel">{option.sublabel}</span>
-                )}
-                {option.id === value && (
-                  <svg className="option-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                )}
+            {searchable && (
+              <div className="dropdown-search">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search sections..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setIsOpen(false);
+                      setSearchTerm('');
+                    }
+                    e.stopPropagation();
+                  }}
+                />
               </div>
-            ))}
+            )}
+            <div className="dropdown-options-list">
+              {filteredOptions.length === 0 ? (
+                <div className="dropdown-no-results">No sections found</div>
+              ) : (
+                filteredOptions.map(option => (
+                  <div
+                    key={option.id}
+                    className={`dropdown-option ${option.id === value ? 'selected' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange(option.id);
+                      setIsOpen(false);
+                      setSearchTerm('');
+                    }}
+                    role="option"
+                    aria-selected={option.id === value}
+                  >
+                    <span className="option-label">{option.label}</span>
+                    {option.sublabel && (
+                      <span className="option-sublabel">{option.sublabel}</span>
+                    )}
+                    {option.id === value && (
+                      <svg className="option-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>

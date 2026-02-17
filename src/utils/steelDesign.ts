@@ -140,6 +140,23 @@ export function calculateShearResistance(section: WSection, Fy: number): number 
 }
 
 /**
+ * Calculate factored tensile resistance (Tr) for gross section yielding
+ * Per CSA S16-19 Clause 13.2(a)(i)
+ * Tr = φ × Ag × Fy
+ * where Ag = gross cross-sectional area
+ * 
+ * Note: This is for gross section yielding only. Net section fracture
+ * (Tr = φu × An × Fu) should be checked separately when applicable.
+ */
+export function calculateTensileResistance(section: WSection, Fy: number): number {
+  const Ag = parseFloat(section.A);  // Gross area in mm²
+  
+  // Tr in N, convert to kN
+  const Tr = (PHI * Ag * Fy) / 1000;
+  return Tr;
+}
+
+/**
  * Check section class for local buckling per CSA S16-19 Table 2
  * Classifies flange and web separately, overall class is the worst (highest) of the two
  * 
