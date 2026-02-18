@@ -1,0 +1,198 @@
+import { useState, useMemo } from 'react';
+import { MathJax } from 'better-react-mathjax';
+import { CustomDropdown } from '../components/CustomDropdown';
+import { ChannelCapacitySummary } from '../components/ChannelCapacitySummary';
+import { 
+  calculateChannelMomentResistance, 
+  calculateChannelShearResistance, 
+  calculateChannelTensileResistance,
+  checkChannelSectionClass 
+} from '../utils/steelDesign';
+import type { CSection, SteelGrade } from '../types/steel';
+import { STEEL_PROPERTIES } from '../types/steel';
+import cSections from '../assets/C_section.json';
+
+interface ChannelCapacityResult {
+  section: CSection;
+  Mr: number;
+  Vr: number;
+  Tr: number;
+}
+
+export function ChannelCapacity() {
+  // Section selection
+  const [selectedDesignation, setSelectedDesignation] = useState<string>('C310x45');
+  
+  // Material inputs
+  const [steelGrade, setSteelGrade] = useState<SteelGrade>('350W');
+
+  // Get unique section designations for dropdown
+  const sectionOptions = useMemo(() => {
+    return (cSections as CSection[]).map(section => ({
+      id: section.Dsg,
+      label: section.Dsg,
+      sublabel: `${section.Mass} kg/m, d=${section.D}mm`,
+    }));
+  }, []);
+
+  // Find selected section
+  const selectedSection = useMemo(() => {
+    return (cSections as CSection[]).find(s => s.Dsg === selectedDesignation) || null;
+  }, [selectedDesignation]);
+
+  // Calculate capacities
+  const capacityResult = useMemo((): ChannelCapacityResult | null => {
+    if (!selectedSection) return null;
+
+    const { Fy } = STEEL_PROPERTIES[steelGrade];
+
+    const Mr = calculateChannelMomentResistance(selectedSection, Fy);
+    const Vr = calculateChannelShearResistance(selectedSection, Fy);
+    const Tr = calculateChannelTensileResistance(selectedSection, Fy);
+
+    return {
+      section: selectedSection,
+      Mr,
+      Vr,
+      Tr,
+    };
+  }, [selectedSection, steelGrade]);
+
+  return (
+    <div className="section-capacity-page">
+      <header className="page-header">
+        <h1>C-Channel Capacity Check</h1>
+        <p>Calculate member resistance values for C-channel sections per CSA S16-19</p>
+      </header>
+
+      {/* Section 1: Inputs */}
+      <section className="input-panel">
+        <h2>Section Selection & Parameters</h2>
+
+        <div className="input-groups-container">
+          <div className="input-group">
+            <h3>Section</h3>
+            <CustomDropdown
+              label="C-Channel Section"
+              options={sectionOptions}
+              value={selectedDesignation}
+              onChange={setSelectedDesignation}
+              searchable={true}
+            />
+            {selectedSection && (
+              <div className="section-quick-info">
+                <div className="quick-info-item">
+                  <span className="label">Mass:</span>
+                  <span className="value">{selectedSection.Mass} kg/m</span>
+                </div>
+                <div className="quick-info-item">
+                  <span className="label">Depth:</span>
+                  <span className="value">{selectedSection.D} mm</span>
+                </div>
+                <div className="quick-info-item">
+                  <span className="label">Width:</span>
+                  <span className="value">{selectedSection.B} mm</span>
+                </div>
+                <div className="quick-info-item">
+                  <span className="label">Area:</span>
+                  <span className="value">{selectedSection.A} mm²</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="input-group">
+            <h3>Material</h3>
+            <CustomDropdown
+              label="Steel Grade"
+              options={[
+                { id: '300W', label: 'CSA G40.21 300W', sublabel: 'Fy = 300 MPa' },
+                { id: '350W', label: 'CSA G40.21 350W', sublabel: 'Fy = 350 MPa' },
+                { id: '345W', label: 'ASTM A992', sublabel: 'Fy = 345 MPa' },
+              ]}
+              value={steelGrade}
+              onChange={(v) => setSteelGrade(v as SteelGrade)}
+            />
+          </div>
+
+          <div className="input-group">
+            <h3>Lateral Support</h3>
+            <p className="input-note">
+              C-channels require continuous lateral support to the compression flange for beam applications.
+            </p>
+          </div>
+        </div>
+
+        {/* Design Criteria Summary */}
+        <div className="design-criteria full-width">
+          <h3>Resistance Equations (CSA S16-19)</h3>
+          <div className="criteria-grid">
+            <div className="criteria-item">
+              <span className="criteria-label">Moment (Elastic):</span>
+              <MathJax inline>{"\\(M_r = \\phi S_x F_y\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <span className="criteria-label">Shear:</span>
+              <MathJax inline>{"\\(V_r = \\phi A_w (0.66 F_y)\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <span className="criteria-label">Tension:</span>
+              <MathJax inline>{"\\(T_r = \\phi A_g F_y\\)"}</MathJax>
+            </div>
+          </div>
+          <p className="criteria-note">φ = 0.9 (resistance factor). C-channels use elastic section modulus (Sx) for moment resistance.</p>
+        </div>
+      </section>
+
+      {/* Section 2: Capacity Results Summary */}
+      {capacityResult && (
+        <section className="capacity-results-panel">
+          <h2>Calculated Resistances</h2>
+          <div className="capacity-cards-grid">
+            <div className="capacity-card moment">
+              <div className="capacity-icon">
+                <MathJax inline>{"\\(M_r\\)"}</MathJax>
+              </div>
+              <div className="capacity-details">
+                <span className="capacity-label">Moment Resistance</span>
+                <span className="capacity-value">{capacityResult.Mr.toFixed(1)} kN·m</span>
+                <span className="capacity-note">Using elastic modulus (Sx)</span>
+              </div>
+            </div>
+
+            <div className="capacity-card shear">
+              <div className="capacity-icon">
+                <MathJax inline>{"\\(V_r\\)"}</MathJax>
+              </div>
+              <div className="capacity-details">
+                <span className="capacity-label">Shear Resistance</span>
+                <span className="capacity-value">{capacityResult.Vr.toFixed(1)} kN</span>
+              </div>
+            </div>
+
+            <div className="capacity-card tension">
+              <div className="capacity-icon">
+                <MathJax inline>{"\\(T_r\\)"}</MathJax>
+              </div>
+              <div className="capacity-details">
+                <span className="capacity-label">Tensile Resistance</span>
+                <span className="capacity-value">{capacityResult.Tr.toFixed(1)} kN</span>
+                <span className="capacity-note">Gross section yielding</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Section 3: Detailed Calculations */}
+      {capacityResult && (
+        <section className="calculations-panel">
+          <ChannelCapacitySummary
+            result={capacityResult}
+            steelGrade={steelGrade}
+          />
+        </section>
+      )}
+    </div>
+  );
+}

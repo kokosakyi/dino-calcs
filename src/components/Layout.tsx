@@ -31,20 +31,56 @@ export function Layout() {
         </div>
 
         <div className="nav-section">
-          <h3>Steel Design</h3>
+          <h3>Beam Design</h3>
           <ul>
             <NavLink to="/steel/beam-design" className={({ isActive }) => isActive ? 'active' : ''}>
               <li>
                 <span className="nav-icon">⊢</span>
-                Beam Design
+                W-Sections
               </li>
             </NavLink>
+            <NavLink to="/steel/channel-beam-design" className={({ isActive }) => isActive ? 'active' : ''}>
+              <li>
+                <span className="nav-icon">⊏</span>
+                C-Channels
+              </li>
+            </NavLink>
+            <NavLink to="/steel/s-beam-design" className={({ isActive }) => isActive ? 'active' : ''}>
+              <li>
+                <span className="nav-icon">⌶</span>
+                S-Sections
+              </li>
+            </NavLink>
+          </ul>
+        </div>
+
+        <div className="nav-section">
+          <h3>Capacity Checks</h3>
+          <ul>
             <NavLink to="/steel/section-capacity" className={({ isActive }) => isActive ? 'active' : ''}>
               <li>
                 <span className="nav-icon">⊠</span>
-                Section Capacity
+                W-Sections
               </li>
             </NavLink>
+            <NavLink to="/steel/channel-capacity" className={({ isActive }) => isActive ? 'active' : ''}>
+              <li>
+                <span className="nav-icon">⊏</span>
+                C-Channels
+              </li>
+            </NavLink>
+            <NavLink to="/steel/s-capacity" className={({ isActive }) => isActive ? 'active' : ''}>
+              <li>
+                <span className="nav-icon">⌶</span>
+                S-Sections
+              </li>
+            </NavLink>
+          </ul>
+        </div>
+
+        <div className="nav-section">
+          <h3>Reference</h3>
+          <ul>
             <NavLink to="/steel/section-browser" className={({ isActive }) => isActive ? 'active' : ''}>
               <li>
                 <span className="nav-icon">▤</span>

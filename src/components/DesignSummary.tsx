@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { MathJax } from 'better-react-mathjax';
 import type { DesignResult, SteelGrade, LateralSupportType, DeflectionResult } from '../types/steel';
 import { STEEL_PROPERTIES } from '../types/steel';
@@ -38,13 +39,207 @@ export function DesignSummary({ result, factoredMoment, factoredShear, steelGrad
   // Calculate actual deflection if we have the necessary data
   const actualDeflection = (span && udlSLS) ? calculateActualDeflection(udlSLS, span, Ix) : undefined;
 
+  const handlePrint = useCallback(() => {
+    // Wait for MathJax to finish rendering before printing
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  }, []);
+
   return (
     <div className="design-summary">
+      <div className="print-actions">
+        <button className="print-btn" onClick={handlePrint}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          Print to PDF
+        </button>
+      </div>
+
+      <div className="print-container">
+        <div className="print-header">
+          <h1>Steel Beam Design Calculation</h1>
+          <p className="subtitle">CSA S16-19 Design Standard</p>
+          <p className="project-info">Generated: {new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+
+        <div className="design-summary-print">
       <h2>Design Summary</h2>
 
-      <div className="summary-section">
-        <h3>Selected Section: {section.Dsg}</h3>
-        <p className="imperial-designation">Imperial: {section.Ds_i}</p>
+      {/* Design Inputs & Section Properties - combined for print */}
+      <div className="summary-section design-inputs-section">
+        <h3>Design Inputs & Section Properties</h3>
+        <p className="section-designation-line">Selected Section: <strong>{section.Dsg}</strong> <span className="imperial-designation">(Imperial: {section.Ds_i})</span></p>
+        <div className="inputs-grid print-two-col">
+          {/* Row 1: Applied Loads + Material Properties */}
+          <div className="input-group">
+            <h4>Applied Loads</h4>
+            <table className="inputs-table">
+              <tbody>
+                <tr>
+                  <td>Factored Moment (<MathJax dynamic inline>{"\\(M_f\\)"}</MathJax>)</td>
+                  <td>{formatNumber(factoredMoment)} kN·m</td>
+                </tr>
+                <tr>
+                  <td>Factored Shear (<MathJax dynamic inline>{"\\(V_f\\)"}</MathJax>)</td>
+                  <td>{formatNumber(factoredShear)} kN</td>
+                </tr>
+                {span && (
+                  <tr>
+                    <td>Span Length (L)</td>
+                    <td>{formatNumber(span, 0)} mm</td>
+                  </tr>
+                )}
+                {udlSLS && (
+                  <tr>
+                    <td>Service Load (<MathJax dynamic inline>{"\\(w_s\\)"}</MathJax>)</td>
+                    <td>{formatNumber(udlSLS, 2)} kN/m</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="input-group">
+            <h4>Material Properties</h4>
+            <table className="inputs-table">
+              <tbody>
+                <tr>
+                  <td>Steel Grade</td>
+                  <td>{steelGrade}</td>
+                </tr>
+                <tr>
+                  <td>Yield Strength (<MathJax dynamic inline>{"\\(F_y\\)"}</MathJax>)</td>
+                  <td>{Fy} MPa</td>
+                </tr>
+                <tr>
+                  <td>Modulus of Elasticity (E)</td>
+                  <td>200,000 MPa</td>
+                </tr>
+                <tr>
+                  <td>Shear Modulus (G)</td>
+                  <td>77,000 MPa</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Row 2: Design Parameters + Geometric Properties */}
+          <div className="input-group">
+            <h4>Design Parameters</h4>
+            <table className="inputs-table">
+              <tbody>
+                <tr>
+                  <td>Lateral Support</td>
+                  <td>{lateralSupport === 'continuous' ? 'Continuous' : 'Unsupported'}</td>
+                </tr>
+                {lateralSupport === 'unsupported' && ltbResult && (
+                  <>
+                    <tr>
+                      <td>Unbraced Length (<MathJax dynamic inline>{"\\(L_u\\)"}</MathJax>)</td>
+                      <td>{formatNumber(ltbResult.unbracedLength, 0)} mm</td>
+                    </tr>
+                    <tr>
+                      <td>Moment Gradient (<MathJax dynamic inline>{"\\(\\omega_2\\)"}</MathJax>)</td>
+                      <td>{formatNumber(ltbResult.omega2, 2)}</td>
+                    </tr>
+                  </>
+                )}
+                {deflectionResult && (
+                  <tr>
+                    <td>Deflection Limit</td>
+                    <td>L/{Math.round((span || 0) / deflectionResult.allowableDeflection)}</td>
+                  </tr>
+                )}
+                <tr>
+                  <td>Resistance Factor (<MathJax dynamic inline>{"\\(\\phi\\)"}</MathJax>)</td>
+                  <td>0.9</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="input-group">
+            <h4>Geometric Properties</h4>
+            <table className="inputs-table">
+              <tbody>
+                <tr>
+                  <td>Depth (d)</td>
+                  <td>{section.D} mm</td>
+                </tr>
+                <tr>
+                  <td>Flange Width (b)</td>
+                  <td>{section.B} mm</td>
+                </tr>
+                <tr>
+                  <td>Flange Thickness (t)</td>
+                  <td>{section.T} mm</td>
+                </tr>
+                <tr>
+                  <td>Web Thickness (w)</td>
+                  <td>{section.W} mm</td>
+                </tr>
+                <tr>
+                  <td>Area (A)</td>
+                  <td>{section.A} mm²</td>
+                </tr>
+                <tr>
+                  <td>Mass</td>
+                  <td>{section.Mass} kg/m</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Row 3: Section Moduli + Moments of Inertia */}
+          <div className="input-group">
+            <h4>Section Moduli</h4>
+            <table className="inputs-table">
+              <tbody>
+                <tr>
+                  <td><MathJax dynamic inline>{"\\(Z_x\\)"}</MathJax> (Plastic)</td>
+                  <td>{section.Zx} ×10³ mm³</td>
+                </tr>
+                <tr>
+                  <td><MathJax dynamic inline>{"\\(S_x\\)"}</MathJax> (Elastic)</td>
+                  <td>{section.Sx} ×10³ mm³</td>
+                </tr>
+                <tr>
+                  <td><MathJax dynamic inline>{"\\(Z_y\\)"}</MathJax></td>
+                  <td>{section.Zy} ×10³ mm³</td>
+                </tr>
+                <tr>
+                  <td><MathJax dynamic inline>{"\\(S_y\\)"}</MathJax></td>
+                  <td>{section.Sy} ×10³ mm³</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="input-group">
+            <h4>Moments of Inertia</h4>
+            <table className="inputs-table">
+              <tbody>
+                <tr>
+                  <td><MathJax dynamic inline>{"\\(I_x\\)"}</MathJax></td>
+                  <td>{section.Ix} ×10⁶ mm⁴</td>
+                </tr>
+                <tr>
+                  <td><MathJax dynamic inline>{"\\(I_y\\)"}</MathJax></td>
+                  <td>{section.Iy} ×10⁶ mm⁴</td>
+                </tr>
+                <tr>
+                  <td><MathJax dynamic inline>{"\\(J\\)"}</MathJax> (Torsional)</td>
+                  <td>{section.J} ×10³ mm⁴</td>
+                </tr>
+                <tr>
+                  <td><MathJax dynamic inline>{"\\(C_w\\)"}</MathJax> (Warping)</td>
+                  <td>{section.Cw} ×10⁹ mm⁶</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div className="summary-section">
@@ -279,7 +474,7 @@ export function DesignSummary({ result, factoredMoment, factoredShear, steelGrad
         </div>
       )}
 
-      <div className="summary-section properties-table">
+      <div className="summary-section properties-table properties-table-print">
         <h3>Section Properties</h3>
         <table>
           <tbody>
@@ -322,6 +517,13 @@ export function DesignSummary({ result, factoredMoment, factoredShear, steelGrad
           </tbody>
         </table>
       </div>
+
+        <div className="print-footer">
+          <span>DinoCalcs - Steel Beam Design Tool</span>
+          <span>Calculations per CSA S16-19</span>
+        </div>
+        </div>{/* end design-summary-print */}
+      </div>{/* end print-container */}
     </div>
   );
 }

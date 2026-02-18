@@ -1,4 +1,4 @@
-import type { WSection, DesignInputs, DesignResult, SectionClassification, LateralTorsionalBucklingResult, DeflectionResult, NBCLoadInputs, NBCCombinationResult } from '../types/steel';
+import type { WSection, CSection, SSection, DesignInputs, DesignResult, ChannelDesignResult, SDesignResult, SectionClassification, LateralTorsionalBucklingResult, DeflectionResult, NBCLoadInputs, NBCCombinationResult } from '../types/steel';
 import { STEEL_PROPERTIES } from '../types/steel';
 
 // CISC S16-19 resistance factor for steel
@@ -464,4 +464,464 @@ export function calculateNBCCombinations(loads: NBCLoadInputs): NBCCombinationRe
     ulsCombinations,
     slsCombinations,
   };
+}
+
+// ============================================================================
+// C-CHANNEL SECTION CALCULATIONS
+// ============================================================================
+
+/**
+ * Calculate factored moment resistance (Mr) for a C-channel section
+ * Per CSA S16-19 Clause 13.5
+ * For channels without Zx, use elastic section modulus: Mr = φ × Sx × Fy
+ */
+export function calculateChannelMomentResistance(section: CSection, Fy: number): number {
+  const sectionClass = checkChannelSectionClass(section, Fy);
+  
+  // C-channels don't have Zx, always use elastic section modulus
+  const Sx = parseFloat(section.Sx) * 1000; // Convert from ×10³ mm³ to mm³
+  
+  // For Class 4 sections, apply a reduction factor (conservative)
+  let Mr: number;
+  if (sectionClass.overallClass <= 3) {
+    Mr = (PHI * Sx * Fy) / 1e6; // kN·m
+  } else {
+    // Class 4 - apply conservative reduction
+    Mr = (PHI * Sx * Fy * 0.9) / 1e6; // kN·m
+  }
+  
+  return Mr;
+}
+
+/**
+ * Calculate factored shear resistance (Vr) for a C-channel section
+ * Per CSA S16-19 Clause 13.4.1.1
+ * Vr = φ × Aw × 0.66 × Fy (for unstiffened webs)
+ */
+export function calculateChannelShearResistance(section: CSection, Fy: number): number {
+  const d = parseFloat(section.D);   // Depth in mm
+  const w = parseFloat(section.W);   // Web thickness in mm
+  const Aw = d * w;                  // Web area in mm²
+  
+  // Check web slenderness for shear
+  const hw = parseFloat(section.HW);
+  const kvLimit = 1014 / Math.sqrt(Fy);
+  
+  let Fs: number;
+  if (hw <= kvLimit) {
+    // Yielding governs
+    Fs = 0.66 * Fy;
+  } else {
+    // Inelastic buckling - simplified
+    Fs = 0.66 * Fy * (kvLimit / hw);
+  }
+  
+  // Vr in N, convert to kN
+  const Vr = (PHI * Aw * Fs) / 1000;
+  return Vr;
+}
+
+/**
+ * Calculate factored tensile resistance (Tr) for a C-channel section
+ * Per CSA S16-19 Clause 13.2(a)(i)
+ * Tr = φ × Ag × Fy
+ */
+export function calculateChannelTensileResistance(section: CSection, Fy: number): number {
+  const Ag = parseFloat(section.A);  // Gross area in mm²
+  
+  // Tr in N, convert to kN
+  const Tr = (PHI * Ag * Fy) / 1000;
+  return Tr;
+}
+
+/**
+ * Check section class for C-channel local buckling per CSA S16-19 Table 2
+ */
+export function checkChannelSectionClass(section: CSection, Fy: number): SectionClassification {
+  const bt = parseFloat(section.BT);  // b/t ratio for flange
+  const hw = parseFloat(section.HW);  // h/w ratio for web
+  const sqrtFy = Math.sqrt(Fy);
+  
+  // Flange class limits per CSA S16-19 Table 2
+  const flangeLimit1 = 145 / sqrtFy;
+  const flangeLimit2 = 170 / sqrtFy;
+  const flangeLimit3 = 200 / sqrtFy;
+  
+  // Web class limits per CSA S16-19 Table 2
+  const webLimit1 = 1100 / sqrtFy;
+  const webLimit2 = 1700 / sqrtFy;
+  const webLimit3 = 1900 / sqrtFy;
+  
+  // Determine flange class
+  let flangeClass: number;
+  if (bt <= flangeLimit1) flangeClass = 1;
+  else if (bt <= flangeLimit2) flangeClass = 2;
+  else if (bt <= flangeLimit3) flangeClass = 3;
+  else flangeClass = 4;
+  
+  // Determine web class
+  let webClass: number;
+  if (hw <= webLimit1) webClass = 1;
+  else if (hw <= webLimit2) webClass = 2;
+  else if (hw <= webLimit3) webClass = 3;
+  else webClass = 4;
+  
+  // Overall class is the worst (highest number) of flange and web
+  const overallClass = Math.max(flangeClass, webClass);
+  
+  return {
+    flangeClass,
+    webClass,
+    overallClass,
+    flangeBT: bt,
+    webHW: hw,
+    flangeLimit1,
+    flangeLimit2,
+    flangeLimit3,
+    webLimit1,
+    webLimit2,
+    webLimit3,
+  };
+}
+
+/**
+ * Check if a C-channel section passes the optional dimension filters
+ */
+function passesChannelSectionFilters(section: CSection, filters?: DesignInputs['sectionFilters']): boolean {
+  if (!filters) return true;
+  
+  const depth = parseFloat(section.D);
+  const flangeWidth = parseFloat(section.B);
+  const flangeThickness = parseFloat(section.T);
+  const webThickness = parseFloat(section.W);
+  
+  if (filters.minDepth !== undefined && depth < filters.minDepth) return false;
+  if (filters.minFlangeWidth !== undefined && flangeWidth < filters.minFlangeWidth) return false;
+  if (filters.minFlangeThickness !== undefined && flangeThickness < filters.minFlangeThickness) return false;
+  if (filters.minWebThickness !== undefined && webThickness < filters.minWebThickness) return false;
+  
+  return true;
+}
+
+/**
+ * Find the most economical C-channel section that satisfies the design requirements
+ */
+export function findOptimalChannelSection(
+  sections: CSection[],
+  inputs: DesignInputs,
+  deflectionRequirement?: DeflectionResult
+): ChannelDesignResult[] {
+  const { Fy } = STEEL_PROPERTIES[inputs.steelGrade];
+  
+  const results: ChannelDesignResult[] = [];
+  
+  for (const section of sections) {
+    // Apply optional section dimension filters
+    if (!passesChannelSectionFilters(section, inputs.sectionFilters)) {
+      continue;
+    }
+    
+    // Check deflection requirement first (if provided)
+    const Ix = parseFloat(section.Ix);  // ×10⁶ mm⁴
+    let deflectionUtilization: number | undefined;
+    
+    if (deflectionRequirement) {
+      if (Ix < deflectionRequirement.requiredIx) {
+        continue;
+      }
+      deflectionUtilization = deflectionRequirement.requiredIx / Ix;
+    }
+    
+    // Calculate moment resistance (channels use elastic modulus only)
+    const Mr = calculateChannelMomentResistance(section, Fy);
+    const Vr = calculateChannelShearResistance(section, Fy);
+    
+    const momentUtilization = inputs.factoredMoment / Mr;
+    const shearUtilization = inputs.factoredShear / Vr;
+    
+    const isAdequate = momentUtilization <= 1.0 && shearUtilization <= 1.0;
+    
+    if (isAdequate) {
+      results.push({
+        section,
+        Mr,
+        Vr,
+        momentUtilization,
+        shearUtilization,
+        isAdequate,
+        deflectionUtilization,
+      });
+    }
+  }
+  
+  // Sort by mass (most economical first)
+  results.sort((a, b) => parseFloat(a.section.Mass) - parseFloat(b.section.Mass));
+  
+  return results;
+}
+
+// ============================================================================
+// S-SECTION (AMERICAN STANDARD BEAM) CALCULATIONS
+// ============================================================================
+
+/**
+ * Calculate factored moment resistance (Mr) for an S-section with continuous lateral support
+ * Per CSA S16-19 Clause 13.5
+ * For Class 1 or 2: Mr = φ × Zx × Fy
+ * For Class 3: Mr = φ × Sx × Fy
+ */
+export function calculateSMomentResistance(section: SSection, Fy: number): number {
+  const sectionClass = checkSSectionClass(section, Fy);
+  
+  let Mr: number;
+  
+  if (sectionClass.overallClass <= 2) {
+    // Class 1 or 2: use plastic section modulus
+    const Zx = parseFloat(section.Zx) * 1000; // Convert from ×10³ mm³ to mm³
+    Mr = (PHI * Zx * Fy) / 1e6;
+  } else if (sectionClass.overallClass === 3) {
+    // Class 3: use elastic section modulus
+    const Sx = parseFloat(section.Sx) * 1000;
+    Mr = (PHI * Sx * Fy) / 1e6;
+  } else {
+    // Class 4 sections - use elastic section modulus (conservative)
+    const Sx = parseFloat(section.Sx) * 1000;
+    Mr = (PHI * Sx * Fy) / 1e6;
+  }
+  
+  return Mr;
+}
+
+/**
+ * Calculate factored moment resistance (Mr) for laterally unsupported S-section beams
+ * Per CSA S16-19 Clause 13.6
+ */
+export function calculateSLateralTorsionalBuckling(
+  section: SSection,
+  Fy: number,
+  unbracedLength: number,
+  omega2: number = 1.0
+): LateralTorsionalBucklingResult {
+  // Section properties
+  const Zx = parseFloat(section.Zx) * 1000;      // mm³ (from ×10³ mm³)
+  const Iy = parseFloat(section.Iy) * 1e6;       // mm⁴ (from ×10⁶ mm⁴)
+  const J = parseFloat(section.J) * 1000;        // mm⁴ (from ×10³ mm⁴)
+  const Cw = parseFloat(section.Cw) * 1e9;       // mm⁶ (from ×10⁹ mm⁶)
+  
+  const L = unbracedLength;  // mm
+  
+  // Plastic moment: Mp = Zx × Fy (N·mm)
+  const Mp_Nmm = Zx * Fy;
+  const Mp = Mp_Nmm / 1e6;  // kN·m
+  
+  // Critical elastic moment: Mu = (ω2 × π / L) × √(E×Iy×G×J + (π×E/L)²×Iy×Cw)
+  const piOverL = Math.PI / L;
+  const term1 = E * Iy * G * J;
+  const term2 = Math.pow(Math.PI * E / L, 2) * Iy * Cw;
+  const Mu_Nmm = omega2 * piOverL * Math.sqrt(term1 + term2);
+  const Mu = Mu_Nmm / 1e6;  // kN·m
+  
+  // Determine Mr based on Mu vs 0.67Mp
+  let Mr: number;
+  let governingCase: 'yielding' | 'inelastic_ltb' | 'elastic_ltb';
+  
+  const threshold = 0.67 * Mp;
+  
+  if (Mu > threshold) {
+    // Inelastic lateral-torsional buckling
+    const Mr_calc = 1.15 * PHI * Mp * (1 - 0.28 * Mp / Mu);
+    const Mr_max = PHI * Mp;
+    Mr = Math.min(Mr_calc, Mr_max);
+    
+    if (Mr_calc >= Mr_max) {
+      governingCase = 'yielding';
+    } else {
+      governingCase = 'inelastic_ltb';
+    }
+  } else {
+    // Elastic lateral-torsional buckling
+    Mr = PHI * Mu;
+    governingCase = 'elastic_ltb';
+  }
+  
+  return {
+    Mu,
+    Mp,
+    Mr,
+    governingCase,
+    omega2,
+    unbracedLength,
+  };
+}
+
+/**
+ * Calculate factored shear resistance (Vr) for an S-section
+ * Per CSA S16-19 Clause 13.4.1.1
+ */
+export function calculateSShearResistance(section: SSection, Fy: number): number {
+  const d = parseFloat(section.D);   // Depth in mm
+  const w = parseFloat(section.W);   // Web thickness in mm
+  const Aw = d * w;                  // Web area in mm²
+  
+  // Check web slenderness for shear
+  const hw = parseFloat(section.HW);
+  const kvLimit = 1014 / Math.sqrt(Fy);
+  
+  let Fs: number;
+  if (hw <= kvLimit) {
+    Fs = 0.66 * Fy;
+  } else {
+    Fs = 0.66 * Fy * (kvLimit / hw);
+  }
+  
+  const Vr = (PHI * Aw * Fs) / 1000;
+  return Vr;
+}
+
+/**
+ * Calculate factored tensile resistance (Tr) for an S-section
+ * Per CSA S16-19 Clause 13.2(a)(i)
+ */
+export function calculateSTensileResistance(section: SSection, Fy: number): number {
+  const Ag = parseFloat(section.A);
+  const Tr = (PHI * Ag * Fy) / 1000;
+  return Tr;
+}
+
+/**
+ * Check section class for S-section local buckling per CSA S16-19 Table 2
+ */
+export function checkSSectionClass(section: SSection, Fy: number): SectionClassification {
+  const bt = parseFloat(section.BT);
+  const hw = parseFloat(section.HW);
+  const sqrtFy = Math.sqrt(Fy);
+  
+  const flangeLimit1 = 145 / sqrtFy;
+  const flangeLimit2 = 170 / sqrtFy;
+  const flangeLimit3 = 200 / sqrtFy;
+  
+  const webLimit1 = 1100 / sqrtFy;
+  const webLimit2 = 1700 / sqrtFy;
+  const webLimit3 = 1900 / sqrtFy;
+  
+  let flangeClass: number;
+  if (bt <= flangeLimit1) flangeClass = 1;
+  else if (bt <= flangeLimit2) flangeClass = 2;
+  else if (bt <= flangeLimit3) flangeClass = 3;
+  else flangeClass = 4;
+  
+  let webClass: number;
+  if (hw <= webLimit1) webClass = 1;
+  else if (hw <= webLimit2) webClass = 2;
+  else if (hw <= webLimit3) webClass = 3;
+  else webClass = 4;
+  
+  const overallClass = Math.max(flangeClass, webClass);
+  
+  return {
+    flangeClass,
+    webClass,
+    overallClass,
+    flangeBT: bt,
+    webHW: hw,
+    flangeLimit1,
+    flangeLimit2,
+    flangeLimit3,
+    webLimit1,
+    webLimit2,
+    webLimit3,
+  };
+}
+
+/**
+ * Check if an S-section passes the optional dimension filters
+ */
+function passesSSectionFilters(section: SSection, filters?: DesignInputs['sectionFilters']): boolean {
+  if (!filters) return true;
+  
+  const depth = parseFloat(section.D);
+  const flangeWidth = parseFloat(section.B);
+  const flangeThickness = parseFloat(section.T);
+  const webThickness = parseFloat(section.W);
+  
+  if (filters.minDepth !== undefined && depth < filters.minDepth) return false;
+  if (filters.minFlangeWidth !== undefined && flangeWidth < filters.minFlangeWidth) return false;
+  if (filters.minFlangeThickness !== undefined && flangeThickness < filters.minFlangeThickness) return false;
+  if (filters.minWebThickness !== undefined && webThickness < filters.minWebThickness) return false;
+  
+  return true;
+}
+
+/**
+ * Find the most economical S-section that satisfies the design requirements
+ */
+export function findOptimalSSection(
+  sections: SSection[],
+  inputs: DesignInputs,
+  deflectionRequirement?: DeflectionResult
+): SDesignResult[] {
+  const { Fy } = STEEL_PROPERTIES[inputs.steelGrade];
+  
+  const results: SDesignResult[] = [];
+  
+  for (const section of sections) {
+    if (!passesSSectionFilters(section, inputs.sectionFilters)) {
+      continue;
+    }
+    
+    const Ix = parseFloat(section.Ix);
+    let deflectionUtilization: number | undefined;
+    
+    if (deflectionRequirement) {
+      if (Ix < deflectionRequirement.requiredIx) {
+        continue;
+      }
+      deflectionUtilization = deflectionRequirement.requiredIx / Ix;
+    }
+    
+    let Mr: number;
+    let ltbResult: LateralTorsionalBucklingResult | undefined;
+    
+    const sectionClass = checkSSectionClass(section, Fy);
+    
+    if (inputs.lateralSupport === 'unsupported' && inputs.unbracedLength && inputs.unbracedLength > 0) {
+      if (sectionClass.overallClass <= 2) {
+        ltbResult = calculateSLateralTorsionalBuckling(
+          section,
+          Fy,
+          inputs.unbracedLength,
+          inputs.omega2 ?? 1.0
+        );
+        Mr = ltbResult.Mr;
+      } else {
+        continue;
+      }
+    } else {
+      Mr = calculateSMomentResistance(section, Fy);
+    }
+    
+    const Vr = calculateSShearResistance(section, Fy);
+    
+    const momentUtilization = inputs.factoredMoment / Mr;
+    const shearUtilization = inputs.factoredShear / Vr;
+    
+    const isAdequate = momentUtilization <= 1.0 && shearUtilization <= 1.0;
+    
+    if (isAdequate) {
+      results.push({
+        section,
+        Mr,
+        Vr,
+        momentUtilization,
+        shearUtilization,
+        isAdequate,
+        ltbResult,
+        deflectionUtilization,
+      });
+    }
+  }
+  
+  results.sort((a, b) => parseFloat(a.section.Mass) - parseFloat(b.section.Mass));
+  
+  return results;
 }

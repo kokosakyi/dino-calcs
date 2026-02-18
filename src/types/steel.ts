@@ -37,6 +37,81 @@ export interface WSection {
   Wt_i: string;     // Imperial weight (lb/ft)
 }
 
+// C-Channel Section properties from CISC Handbook
+export interface CSection {
+  Prp: string;      // Preferred section indicator
+  Dsg: string;      // Designation (e.g., "C380x74")
+  Avl: string;      // Availability
+  Shp: string;      // Shape type
+  Grp: string;      // Group
+  Use: string;      // Usage code
+  D: string;        // Depth (mm)
+  B: string;        // Flange width (mm)
+  T: string;        // Flange thickness (mm)
+  W: string;        // Web thickness (mm)
+  BT: string;       // b/t ratio (flange)
+  HW: string;       // h/w ratio (web)
+  K: string;        // k dimension (mm)
+  Dnom: string;     // Nominal depth (mm)
+  Mass: string;     // Mass (kg/m)
+  A: string;        // Area (mm²)
+  Ix: string;       // Moment of inertia about x-axis (×10⁶ mm⁴)
+  Sx: string;       // Elastic section modulus about x-axis (×10³ mm³)
+  Rx: string;       // Radius of gyration about x-axis (mm)
+  Iy: string;       // Moment of inertia about y-axis (×10⁶ mm⁴)
+  Sy: string;       // Elastic section modulus about y-axis (×10³ mm³)
+  Ry: string;       // Radius of gyration about y-axis (mm)
+  X: string;        // Centroid X location (mm)
+  J: string;        // Torsional constant (×10³ mm⁴)
+  Cw: string;       // Warping constant (×10⁹ mm⁶)
+  Xo: string;       // Shear center location (mm)
+  T1: string;       // Toe thickness 1 (mm)
+  T2: string;       // Toe thickness 2 (mm)
+  Slp: string;      // Flange slope
+  SA: string;       // Surface area per meter (m²/m)
+  Ds_i: string;     // Imperial designation
+  Dn_i: string;     // Imperial nominal depth
+  Wt_i: string;     // Imperial weight (lb/ft)
+}
+
+// S-Section (American Standard Beam) properties from CISC Handbook
+export interface SSection {
+  Prp: string;      // Preferred section indicator
+  Dsg: string;      // Designation (e.g., "S610x180")
+  Avl: string;      // Availability
+  Shp: string;      // Shape type
+  Grp: string;      // Group
+  Use: string;      // Usage code
+  D: string;        // Depth (mm)
+  B: string;        // Flange width (mm)
+  T: string;        // Flange thickness (mm)
+  W: string;        // Web thickness (mm)
+  BT: string;       // b/t ratio (flange)
+  HW: string;       // h/w ratio (web)
+  K: string;        // k dimension (mm)
+  K1: string;       // k1 dimension (mm)
+  Dnom: string;     // Nominal depth (mm)
+  Mass: string;     // Mass (kg/m)
+  A: string;        // Area (mm²)
+  Ix: string;       // Moment of inertia about x-axis (×10⁶ mm⁴)
+  Sx: string;       // Elastic section modulus about x-axis (×10³ mm³)
+  Rx: string;       // Radius of gyration about x-axis (mm)
+  Zx: string;       // Plastic section modulus about x-axis (×10³ mm³)
+  Iy: string;       // Moment of inertia about y-axis (×10⁶ mm⁴)
+  Sy: string;       // Elastic section modulus about y-axis (×10³ mm³)
+  Ry: string;       // Radius of gyration about y-axis (mm)
+  Zy: string;       // Plastic section modulus about y-axis (×10³ mm³)
+  J: string;        // Torsional constant (×10³ mm⁴)
+  Cw: string;       // Warping constant (×10⁹ mm⁶)
+  T1: string;       // Toe thickness 1 (mm)
+  T2: string;       // Toe thickness 2 (mm)
+  Slp: string;      // Flange slope
+  SA: string;       // Surface area per meter (m²/m)
+  Ds_i: string;     // Imperial designation
+  Dn_i: string;     // Imperial nominal depth
+  Wt_i: string;     // Imperial weight (lb/ft)
+}
+
 // Generic section interface for all section types
 export interface GenericSection {
   // Common properties (all sections)
@@ -178,6 +253,27 @@ export interface LateralTorsionalBucklingResult {
 
 export interface DesignResult {
   section: WSection;
+  Mr: number;       // Factored moment resistance (kN·m)
+  Vr: number;       // Factored shear resistance (kN)
+  momentUtilization: number;  // Mf/Mr ratio
+  shearUtilization: number;   // Vf/Vr ratio
+  isAdequate: boolean;
+  ltbResult?: LateralTorsionalBucklingResult;  // LTB calculation details (when laterally unsupported)
+  deflectionUtilization?: number;  // Ix_required/Ix ratio (for UDL/NBC modes)
+}
+
+export interface ChannelDesignResult {
+  section: CSection;
+  Mr: number;       // Factored moment resistance (kN·m)
+  Vr: number;       // Factored shear resistance (kN)
+  momentUtilization: number;  // Mf/Mr ratio
+  shearUtilization: number;   // Vf/Vr ratio
+  isAdequate: boolean;
+  deflectionUtilization?: number;  // Ix_required/Ix ratio (for UDL/NBC modes)
+}
+
+export interface SDesignResult {
+  section: SSection;
   Mr: number;       // Factored moment resistance (kN·m)
   Vr: number;       // Factored shear resistance (kN)
   momentUtilization: number;  // Mf/Mr ratio
