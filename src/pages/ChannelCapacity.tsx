@@ -5,8 +5,7 @@ import { ChannelCapacitySummary } from '../components/ChannelCapacitySummary';
 import { 
   calculateChannelMomentResistance, 
   calculateChannelShearResistance, 
-  calculateChannelTensileResistance,
-  checkChannelSectionClass 
+  calculateChannelTensileResistance
 } from '../utils/steelDesign';
 import type { CSection, SteelGrade } from '../types/steel';
 import { STEEL_PROPERTIES } from '../types/steel';
