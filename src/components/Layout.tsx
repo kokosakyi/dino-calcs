@@ -1,12 +1,44 @@
+import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { useTheme } from '../context/ThemeContext';
 
 export function Layout() {
   const { theme, toggleTheme } = useTheme();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="app-container">
-      <nav className="sidebar">
+      <button
+        className="mobile-menu-toggle"
+        onClick={() => setMobileMenuOpen(true)}
+        aria-label="Open menu"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+
+      {mobileMenuOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <nav className={`sidebar ${mobileMenuOpen ? 'sidebar-open' : ''}`}>
+        <button
+          className="sidebar-close"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-label="Close menu"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
         <div className="sidebar-header">
           <div className="logo">
             <h1>Dino Calcs</h1>
@@ -33,19 +65,19 @@ export function Layout() {
         <div className="nav-section">
           <h3>Beam Design</h3>
           <ul>
-            <NavLink to="/steel/beam-design" className={({ isActive }) => isActive ? 'active' : ''}>
+            <NavLink to="/steel/beam-design" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMobileMenuOpen(false)}>
               <li>
                 <span className="nav-icon">⊢</span>
                 W-Sections
               </li>
             </NavLink>
-            <NavLink to="/steel/channel-beam-design" className={({ isActive }) => isActive ? 'active' : ''}>
+            <NavLink to="/steel/channel-beam-design" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMobileMenuOpen(false)}>
               <li>
                 <span className="nav-icon">⊏</span>
                 C-Channels
               </li>
             </NavLink>
-            <NavLink to="/steel/s-beam-design" className={({ isActive }) => isActive ? 'active' : ''}>
+            <NavLink to="/steel/s-beam-design" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMobileMenuOpen(false)}>
               <li>
                 <span className="nav-icon">⌶</span>
                 S-Sections
@@ -57,19 +89,19 @@ export function Layout() {
         <div className="nav-section">
           <h3>Capacity Checks</h3>
           <ul>
-            <NavLink to="/steel/section-capacity" className={({ isActive }) => isActive ? 'active' : ''}>
+            <NavLink to="/steel/section-capacity" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMobileMenuOpen(false)}>
               <li>
                 <span className="nav-icon">⊠</span>
                 W-Sections
               </li>
             </NavLink>
-            <NavLink to="/steel/channel-capacity" className={({ isActive }) => isActive ? 'active' : ''}>
+            <NavLink to="/steel/channel-capacity" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMobileMenuOpen(false)}>
               <li>
                 <span className="nav-icon">⊏</span>
                 C-Channels
               </li>
             </NavLink>
-            <NavLink to="/steel/s-capacity" className={({ isActive }) => isActive ? 'active' : ''}>
+            <NavLink to="/steel/s-capacity" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMobileMenuOpen(false)}>
               <li>
                 <span className="nav-icon">⌶</span>
                 S-Sections
@@ -81,7 +113,7 @@ export function Layout() {
         <div className="nav-section">
           <h3>Reference</h3>
           <ul>
-            <NavLink to="/steel/section-browser" className={({ isActive }) => isActive ? 'active' : ''}>
+            <NavLink to="/steel/section-browser" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMobileMenuOpen(false)}>
               <li>
                 <span className="nav-icon">▤</span>
                 Section Browser
