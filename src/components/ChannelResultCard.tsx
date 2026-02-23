@@ -12,7 +12,7 @@ interface ChannelResultCardProps {
   lateralSupport: 'continuous' | 'unsupported';
 }
 
-export function ChannelResultCard({ result, rank, isSelected, onSelect, steelGrade, lateralSupport }: ChannelResultCardProps) {
+export function ChannelResultCard({ result, rank, isSelected, onSelect, steelGrade }: ChannelResultCardProps) {
   const { section, Mr, Vr, momentUtilization, shearUtilization, deflectionUtilization } = result;
   const { Fy } = STEEL_PROPERTIES[steelGrade];
   const sectionClass = checkChannelSectionClass(section, Fy);
