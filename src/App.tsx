@@ -10,6 +10,7 @@ import { SectionCapacity } from './pages/SectionCapacity';
 import { ChannelCapacity } from './pages/ChannelCapacity';
 import { SCapacity } from './pages/SCapacity';
 import { SectionBrowser } from './pages/SectionBrowser';
+import { ColumnDesign } from './pages/ColumnDesign';
 import './App.css';
 
 const mathJaxConfig = {
@@ -39,6 +40,7 @@ function App() {
                 <Route path="section-capacity" element={<SectionCapacity />} />
                 <Route path="channel-capacity" element={<ChannelCapacity />} />
                 <Route path="s-capacity" element={<SCapacity />} />
+                <Route path="column-design" element={<ColumnDesign />} />
                 <Route path="section-browser" element={<SectionBrowser />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

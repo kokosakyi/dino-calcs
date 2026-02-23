@@ -1,4 +1,4 @@
-import type { WSection, CSection, SSection, DesignInputs, DesignResult, ChannelDesignResult, SDesignResult, SectionClassification, LateralTorsionalBucklingResult, DeflectionResult, NBCLoadInputs, NBCCombinationResult } from '../types/steel';
+import type { WSection, CSection, SSection, DesignInputs, DesignResult, ChannelDesignResult, SDesignResult, ColumnDesignInputs, ColumnDesignResult, ColumnBucklingResult, SectionClassification, LateralTorsionalBucklingResult, ChannelLTBResult, DeflectionResult, NBCLoadInputs, NBCCombinationResult } from '../types/steel';
 import { STEEL_PROPERTIES } from '../types/steel';
 
 // CISC S16-19 resistance factor for steel
@@ -494,6 +494,70 @@ export function calculateChannelMomentResistance(section: CSection, Fy: number):
 }
 
 /**
+ * Calculate factored moment resistance (Mr) for laterally unsupported C-channel beams
+ * Per CSA S16-19 Clause 13.6
+ *
+ * Channels use elastic section modulus (no Zx), so M_y = Sx × Fy:
+ * - When Mu > 0.67My: Mr = 1.15φMy(1 - 0.28My/Mu) ≤ φMy
+ * - When Mu ≤ 0.67My: Mr = φMu
+ *
+ * Critical elastic moment: Mu = (ω2 × π / L) × √(E×Iy×G×J + (π×E/L)²×Iy×Cw)
+ */
+export function calculateChannelLateralTorsionalBuckling(
+  section: CSection,
+  Fy: number,
+  unbracedLength: number,
+  omega2: number = 1.0
+): ChannelLTBResult {
+  const Sx = parseFloat(section.Sx) * 1000;      // mm³ (from ×10³ mm³)
+  const Iy = parseFloat(section.Iy) * 1e6;       // mm⁴ (from ×10⁶ mm⁴)
+  const J = parseFloat(section.J) * 1000;        // mm⁴ (from ×10³ mm⁴)
+  const Cw = parseFloat(section.Cw) * 1e9;       // mm⁶ (from ×10⁹ mm⁶)
+
+  const L = unbracedLength;
+
+  // Yield moment: My = Sx × Fy (N·mm)
+  const My_Nmm = Sx * Fy;
+  const My = My_Nmm / 1e6;  // kN·m
+
+  // Critical elastic moment: Mu = (ω2 × π / L) × √(E×Iy×G×J + (π×E/L)²×Iy×Cw)
+  const piOverL = Math.PI / L;
+  const term1 = E * Iy * G * J;
+  const term2 = Math.pow(Math.PI * E / L, 2) * Iy * Cw;
+  const Mu_Nmm = omega2 * piOverL * Math.sqrt(term1 + term2);
+  const Mu = Mu_Nmm / 1e6;  // kN·m
+
+  let Mr: number;
+  let governingCase: 'yielding' | 'inelastic_ltb' | 'elastic_ltb';
+
+  const threshold = 0.67 * My;
+
+  if (Mu > threshold) {
+    const Mr_calc = 1.15 * PHI * My * (1 - 0.28 * My / Mu);
+    const Mr_max = PHI * My;
+    Mr = Math.min(Mr_calc, Mr_max);
+
+    if (Mr_calc >= Mr_max) {
+      governingCase = 'yielding';
+    } else {
+      governingCase = 'inelastic_ltb';
+    }
+  } else {
+    Mr = PHI * Mu;
+    governingCase = 'elastic_ltb';
+  }
+
+  return {
+    Mu,
+    My,
+    Mr,
+    governingCase,
+    omega2,
+    unbracedLength,
+  };
+}
+
+/**
  * Calculate factored shear resistance (Vr) for a C-channel section
  * Per CSA S16-19 Clause 13.4.1.1
  * Vr = φ × Aw × 0.66 × Fy (for unstiffened webs)
@@ -632,8 +696,21 @@ export function findOptimalChannelSection(
       deflectionUtilization = deflectionRequirement.requiredIx / Ix;
     }
     
-    // Calculate moment resistance (channels use elastic modulus only)
-    const Mr = calculateChannelMomentResistance(section, Fy);
+    let Mr: number;
+    let ltbResult: ChannelLTBResult | undefined;
+
+    if (inputs.lateralSupport === 'unsupported' && inputs.unbracedLength && inputs.unbracedLength > 0) {
+      ltbResult = calculateChannelLateralTorsionalBuckling(
+        section,
+        Fy,
+        inputs.unbracedLength,
+        inputs.omega2 ?? 1.0
+      );
+      Mr = ltbResult.Mr;
+    } else {
+      Mr = calculateChannelMomentResistance(section, Fy);
+    }
+
     const Vr = calculateChannelShearResistance(section, Fy);
     
     const momentUtilization = inputs.factoredMoment / Mr;
@@ -649,6 +726,7 @@ export function findOptimalChannelSection(
         momentUtilization,
         shearUtilization,
         isAdequate,
+        ltbResult,
         deflectionUtilization,
       });
     }
@@ -923,5 +1001,93 @@ export function findOptimalSSection(
   
   results.sort((a, b) => parseFloat(a.section.Mass) - parseFloat(b.section.Mass));
   
+  return results;
+}
+
+// ============================================================================
+// W-SECTION COLUMN DESIGN (CSA S16-19 Cl. 13.3)
+// ============================================================================
+
+/**
+ * Calculate compressive resistance for a W-section column
+ * Per CSA S16-19 Clause 13.3.1:
+ *
+ * Cr = φ × Fy × Ag / (1 + λ^(2n))^(1/n)
+ * where n = 1.34
+ * λ = √(Fy / Fe)
+ * Fe = π²E / (KL/r)²
+ */
+export function calculateColumnResistance(
+  section: WSection,
+  Fy: number,
+  effectiveLengthFactor: number,
+  unbracedLength: number,
+  bucklingAxis: 'strong' | 'weak'
+): ColumnBucklingResult {
+  const Ag = parseFloat(section.A);
+  const r = bucklingAxis === 'strong'
+    ? parseFloat(section.Rx)
+    : parseFloat(section.Ry);
+
+  const n = 1.34;
+  const kL = effectiveLengthFactor * unbracedLength;
+  const kLr = kL / r;
+
+  // Euler buckling stress
+  const Fe = (Math.PI * Math.PI * E) / (kLr * kLr);
+
+  // Non-dimensional slenderness
+  const lambda = Math.sqrt(Fy / Fe);
+
+  // Compressive resistance (N), convert to kN
+  const Cr = (PHI * Fy * Ag) / (Math.pow(1 + Math.pow(lambda, 2 * n), 1 / n)) / 1000;
+
+  return { Fe, lambda, Cr, kL, r, kLr };
+}
+
+/**
+ * Find the most economical W-section for column design
+ */
+export function findOptimalColumnSection(
+  sections: WSection[],
+  inputs: ColumnDesignInputs
+): ColumnDesignResult[] {
+  const { Fy } = STEEL_PROPERTIES[inputs.steelGrade];
+  const results: ColumnDesignResult[] = [];
+
+  for (const section of sections) {
+    if (!passesSectionFilters(section, inputs.sectionFilters)) {
+      continue;
+    }
+
+    // Class 4 sections not permitted for compression per Cl. 13.3
+    const sectionClass = checkSectionClass(section, Fy);
+    if (sectionClass.overallClass > 3) {
+      continue;
+    }
+
+    const bucklingResult = calculateColumnResistance(
+      section,
+      Fy,
+      inputs.effectiveLengthFactor,
+      inputs.unbracedLength,
+      inputs.bucklingAxis
+    );
+
+    const axialUtilization = inputs.factoredAxialLoad / bucklingResult.Cr;
+    const isAdequate = axialUtilization <= 1.0;
+
+    if (isAdequate) {
+      results.push({
+        section,
+        Cr: bucklingResult.Cr,
+        axialUtilization,
+        isAdequate,
+        bucklingResult,
+      });
+    }
+  }
+
+  results.sort((a, b) => parseFloat(a.section.Mass) - parseFloat(b.section.Mass));
   return results;
 }

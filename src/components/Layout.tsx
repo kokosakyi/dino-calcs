@@ -123,12 +123,20 @@ export function Layout() {
         </div>
 
         <div className="nav-section">
+          <h3>Column Design</h3>
+          <ul>
+            <NavLink to="/steel/column-design" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMobileMenuOpen(false)}>
+              <li>
+                <span className="nav-icon">⊡</span>
+                W-Sections
+              </li>
+            </NavLink>
+          </ul>
+        </div>
+
+        <div className="nav-section">
           <h3>Coming Soon</h3>
           <ul className="disabled">
-            <li>
-              <span className="nav-icon">⊡</span>
-              Column Design
-            </li>
             <li>
               <span className="nav-icon">⊞</span>
               Connections

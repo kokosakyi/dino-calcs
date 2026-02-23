@@ -23,12 +23,12 @@ export function Home() {
           <span className="feature-tag">CISC Database</span>
         </Link>
 
-        <div className="feature-card disabled">
+        <Link to="/steel/column-design" className="feature-card">
           <div className="feature-icon">⊡</div>
           <h2>Column Design</h2>
-          <p>Axial and combined loading design for steel columns</p>
-          <span className="feature-tag coming-soon">Coming Soon</span>
-        </div>
+          <p>Select economical W-sections for axial compression using CSA S16-19 buckling resistance</p>
+          <span className="feature-tag">CSA S16-19</span>
+        </Link>
 
         <div className="feature-card disabled">
           <div className="feature-icon">⊞</div>

@@ -8,9 +8,10 @@ import {
   calculateShearResistance, 
   calculateTensileResistance,
   calculateLateralTorsionalBuckling,
+  calculateColumnResistance,
   checkSectionClass 
 } from '../utils/steelDesign';
-import type { WSection, SteelGrade, LateralSupportType, LateralTorsionalBucklingResult } from '../types/steel';
+import type { WSection, SteelGrade, LateralSupportType, BucklingAxis, LateralTorsionalBucklingResult, ColumnBucklingResult } from '../types/steel';
 import { STEEL_PROPERTIES } from '../types/steel';
 import wSections from '../data/W_Section.json';
 
@@ -19,7 +20,9 @@ interface CapacityResult {
   Mr: number;
   Vr: number;
   Tr: number;
+  Cr: number;
   ltbResult?: LateralTorsionalBucklingResult;
+  bucklingResult?: ColumnBucklingResult;
 }
 
 export function SectionCapacity() {
@@ -31,6 +34,11 @@ export function SectionCapacity() {
   const [lateralSupport, setLateralSupport] = useState<LateralSupportType>('continuous');
   const [unbracedLength, setUnbracedLength] = useState<number>(3000);
   const [omega2, setOmega2] = useState<number>(1.0);
+
+  // Compression inputs
+  const [columnLength, setColumnLength] = useState<number>(4000);
+  const [effectiveLengthFactor, setEffectiveLengthFactor] = useState<number>(1.0);
+  const [bucklingAxis, setBucklingAxis] = useState<BucklingAxis>('weak');
 
   // Get unique section designations for dropdown
   const sectionOptions = useMemo(() => {
@@ -78,14 +86,26 @@ export function SectionCapacity() {
     const Vr = calculateShearResistance(selectedSection, Fy);
     const Tr = calculateTensileResistance(selectedSection, Fy);
 
+    // Compression resistance
+    const bucklingResult = calculateColumnResistance(
+      selectedSection,
+      Fy,
+      effectiveLengthFactor,
+      columnLength,
+      bucklingAxis
+    );
+    const Cr = bucklingResult.Cr;
+
     return {
       section: selectedSection,
       Mr,
       Vr,
       Tr,
+      Cr,
       ltbResult,
+      bucklingResult,
     };
-  }, [selectedSection, steelGrade, lateralSupport, unbracedLength, omega2]);
+  }, [selectedSection, steelGrade, lateralSupport, unbracedLength, omega2, columnLength, effectiveLengthFactor, bucklingAxis]);
 
   return (
     <div className="section-capacity-page">
@@ -181,6 +201,39 @@ export function SectionCapacity() {
               </>
             )}
           </div>
+
+          <div className="input-group">
+            <h3>Compression Parameters</h3>
+            <InputField
+              label="Unbraced Column Length (L)"
+              value={columnLength}
+              onChange={setColumnLength}
+              unit="mm"
+              min={0}
+              step={100}
+            />
+            <CustomDropdown
+              label="Effective Length Factor (K)"
+              options={[
+                { id: '0.65', label: 'K = 0.65', sublabel: 'Fixed–Fixed' },
+                { id: '0.80', label: 'K = 0.80', sublabel: 'Fixed–Pinned' },
+                { id: '1.0', label: 'K = 1.0', sublabel: 'Pinned–Pinned' },
+                { id: '1.2', label: 'K = 1.2', sublabel: 'Partial sway' },
+                { id: '2.0', label: 'K = 2.0', sublabel: 'Cantilever' },
+              ]}
+              value={String(effectiveLengthFactor)}
+              onChange={(v) => setEffectiveLengthFactor(Number(v))}
+            />
+            <CustomDropdown
+              label="Buckling Axis"
+              options={[
+                { id: 'weak', label: 'Weak Axis (y-y)', sublabel: 'Typically governs' },
+                { id: 'strong', label: 'Strong Axis (x-x)', sublabel: 'Braced about weak axis' },
+              ]}
+              value={bucklingAxis}
+              onChange={(v) => setBucklingAxis(v as BucklingAxis)}
+            />
+          </div>
         </div>
 
         {/* Design Criteria Summary */}
@@ -216,8 +269,12 @@ export function SectionCapacity() {
               <span className="criteria-label">Tension:</span>
               <MathJax inline>{"\\(T_r = \\phi A_g F_y\\)"}</MathJax>
             </div>
+            <div className="criteria-item">
+              <span className="criteria-label">Compression:</span>
+              <MathJax inline>{"\\(C_r = \\frac{\\phi F_y A_g}{(1 + \\lambda^{2n})^{1/n}}\\)"}</MathJax>
+            </div>
           </div>
-          <p className="criteria-note">φ = 0.9 (resistance factor)</p>
+          <p className="criteria-note">φ = 0.9 (resistance factor), n = 1.34 for compression</p>
         </div>
       </section>
 
@@ -263,6 +320,21 @@ export function SectionCapacity() {
                 <span className="capacity-note">Gross section yielding</span>
               </div>
             </div>
+
+            <div className="capacity-card compression">
+              <div className="capacity-icon">
+                <MathJax inline>{"\\(C_r\\)"}</MathJax>
+              </div>
+              <div className="capacity-details">
+                <span className="capacity-label">Compressive Resistance</span>
+                <span className="capacity-value">{capacityResult.Cr.toFixed(1)} kN</span>
+                {capacityResult.bucklingResult && (
+                  <span className="capacity-note">
+                    KL/r = {capacityResult.bucklingResult.kLr.toFixed(1)}, {bucklingAxis === 'weak' ? 'weak' : 'strong'} axis
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </section>
       )}
@@ -274,6 +346,8 @@ export function SectionCapacity() {
             result={capacityResult}
             steelGrade={steelGrade}
             lateralSupport={lateralSupport}
+            effectiveLengthFactor={effectiveLengthFactor}
+            bucklingAxis={bucklingAxis}
           />
         </section>
       )}

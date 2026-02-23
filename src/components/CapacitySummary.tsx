@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { MathJax } from 'better-react-mathjax';
-import type { WSection, SteelGrade, LateralSupportType, LateralTorsionalBucklingResult } from '../types/steel';
+import type { WSection, SteelGrade, LateralSupportType, BucklingAxis, LateralTorsionalBucklingResult, ColumnBucklingResult } from '../types/steel';
 import { STEEL_PROPERTIES } from '../types/steel';
 import { formatNumber, checkSectionClass } from '../utils/steelDesign';
 
@@ -9,17 +9,21 @@ interface CapacityResult {
   Mr: number;
   Vr: number;
   Tr: number;
+  Cr: number;
   ltbResult?: LateralTorsionalBucklingResult;
+  bucklingResult?: ColumnBucklingResult;
 }
 
 interface CapacitySummaryProps {
   result: CapacityResult;
   steelGrade: SteelGrade;
   lateralSupport: LateralSupportType;
+  effectiveLengthFactor: number;
+  bucklingAxis: BucklingAxis;
 }
 
-export function CapacitySummary({ result, steelGrade, lateralSupport }: CapacitySummaryProps) {
-  const { section, Mr, Vr, Tr, ltbResult } = result;
+export function CapacitySummary({ result, steelGrade, lateralSupport, effectiveLengthFactor, bucklingAxis }: CapacitySummaryProps) {
+  const { section, Mr, Vr, Tr, Cr, ltbResult, bucklingResult } = result;
   const { Fy } = STEEL_PROPERTIES[steelGrade];
   const Zx = parseFloat(section.Zx) * 1000;
   const Sx = parseFloat(section.Sx) * 1000;
@@ -399,6 +403,43 @@ export function CapacitySummary({ result, steelGrade, lateralSupport }: Capacity
               <MathJax dynamic inline>{`\\(T_r = ${formatNumber(Tr)} \\text{ kN}\\)`}</MathJax>
             </div>
           </div>
+
+          {/* Compressive Resistance */}
+          {bucklingResult && (
+            <div className="summary-section">
+              <h3>Compressive Resistance (CSA S16-19 Cl. 13.3.1)</h3>
+              <p className="support-type">
+                Buckling about {bucklingAxis === 'strong' ? 'strong axis (x-x)' : 'weak axis (y-y)'}, using{' '}
+                <MathJax dynamic inline>{`\\(${bucklingAxis === 'strong' ? 'r_x' : 'r_y'} = ${bucklingAxis === 'strong' ? section.Rx : section.Ry} \\text{ mm}\\)`}</MathJax>
+              </p>
+              <div className="equation-block">
+                <MathJax dynamic>
+                  {`\\[KL = ${effectiveLengthFactor} \\times ${formatNumber(bucklingResult.kL / effectiveLengthFactor, 0)} = ${formatNumber(bucklingResult.kL, 0)} \\text{ mm}\\]`}
+                </MathJax>
+                <MathJax dynamic>
+                  {`\\[\\frac{KL}{r} = \\frac{${formatNumber(bucklingResult.kL, 0)}}{${bucklingAxis === 'strong' ? section.Rx : section.Ry}} = ${formatNumber(bucklingResult.kLr, 2)}\\]`}
+                </MathJax>
+                <MathJax dynamic>
+                  {`\\[F_e = \\frac{\\pi^2 E}{(KL/r)^2} = \\frac{\\pi^2 \\times 200{,}000}{${formatNumber(bucklingResult.kLr, 2)}^2} = ${formatNumber(bucklingResult.Fe, 1)} \\text{ MPa}\\]`}
+                </MathJax>
+                <MathJax dynamic>
+                  {`\\[\\lambda = \\sqrt{\\frac{F_y}{F_e}} = \\sqrt{\\frac{${Fy}}{${formatNumber(bucklingResult.Fe, 1)}}} = ${formatNumber(bucklingResult.lambda, 4)}\\]`}
+                </MathJax>
+                <MathJax dynamic>
+                  {`\\[C_r = \\frac{\\phi F_y A_g}{(1 + \\lambda^{2n})^{1/n}} \\quad (n = 1.34)\\]`}
+                </MathJax>
+                <MathJax dynamic>
+                  {`\\[C_r = \\frac{0.9 \\times ${Fy} \\times ${formatNumber(Ag, 0)}}{(1 + ${formatNumber(bucklingResult.lambda, 4)}^{2 \\times 1.34})^{1/1.34}}\\]`}
+                </MathJax>
+                <MathJax dynamic>
+                  {`\\[C_r = ${formatNumber(Cr)} \\text{ kN}\\]`}
+                </MathJax>
+              </div>
+              <div className="capacity-result">
+                <MathJax dynamic inline>{`\\(C_r = ${formatNumber(Cr)} \\text{ kN}\\)`}</MathJax>
+              </div>
+            </div>
+          )}
 
           {/* Complete Section Properties Table */}
           <div className="summary-section properties-table properties-table-print">

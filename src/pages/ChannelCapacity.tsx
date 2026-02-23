@@ -1,13 +1,15 @@
 import { useState, useMemo } from 'react';
 import { MathJax } from 'better-react-mathjax';
 import { CustomDropdown } from '../components/CustomDropdown';
+import { InputField } from '../components/InputField';
 import { ChannelCapacitySummary } from '../components/ChannelCapacitySummary';
 import { 
   calculateChannelMomentResistance, 
   calculateChannelShearResistance, 
-  calculateChannelTensileResistance
+  calculateChannelTensileResistance,
+  calculateChannelLateralTorsionalBuckling
 } from '../utils/steelDesign';
-import type { CSection, SteelGrade } from '../types/steel';
+import type { CSection, SteelGrade, LateralSupportType, ChannelLTBResult } from '../types/steel';
 import { STEEL_PROPERTIES } from '../types/steel';
 import cSections from '../assets/C_section.json';
 
@@ -16,14 +18,18 @@ interface ChannelCapacityResult {
   Mr: number;
   Vr: number;
   Tr: number;
+  ltbResult?: ChannelLTBResult;
 }
 
 export function ChannelCapacity() {
   // Section selection
   const [selectedDesignation, setSelectedDesignation] = useState<string>('C310x45');
   
-  // Material inputs
+  // Material and support inputs
   const [steelGrade, setSteelGrade] = useState<SteelGrade>('350W');
+  const [lateralSupport, setLateralSupport] = useState<LateralSupportType>('continuous');
+  const [unbracedLength, setUnbracedLength] = useState<number>(3000);
+  const [omega2, setOmega2] = useState<number>(1.0);
 
   // Get unique section designations for dropdown
   const sectionOptions = useMemo(() => {
@@ -45,7 +51,21 @@ export function ChannelCapacity() {
 
     const { Fy } = STEEL_PROPERTIES[steelGrade];
 
-    const Mr = calculateChannelMomentResistance(selectedSection, Fy);
+    let Mr: number;
+    let ltbResult: ChannelLTBResult | undefined;
+
+    if (lateralSupport === 'unsupported' && unbracedLength > 0) {
+      ltbResult = calculateChannelLateralTorsionalBuckling(
+        selectedSection,
+        Fy,
+        unbracedLength,
+        omega2
+      );
+      Mr = ltbResult.Mr;
+    } else {
+      Mr = calculateChannelMomentResistance(selectedSection, Fy);
+    }
+
     const Vr = calculateChannelShearResistance(selectedSection, Fy);
     const Tr = calculateChannelTensileResistance(selectedSection, Fy);
 
@@ -54,8 +74,9 @@ export function ChannelCapacity() {
       Mr,
       Vr,
       Tr,
+      ltbResult,
     };
-  }, [selectedSection, steelGrade]);
+  }, [selectedSection, steelGrade, lateralSupport, unbracedLength, omega2]);
 
   return (
     <div className="section-capacity-page">
@@ -116,9 +137,40 @@ export function ChannelCapacity() {
 
           <div className="input-group">
             <h3>Lateral Support</h3>
-            <p className="input-note">
-              C-channels require continuous lateral support to the compression flange for beam applications.
-            </p>
+            <CustomDropdown
+              label="Compression Flange Support"
+              options={[
+                { id: 'continuous', label: 'Continuous Lateral Support' },
+                { id: 'unsupported', label: 'Laterally Unsupported' },
+              ]}
+              value={lateralSupport}
+              onChange={(v) => setLateralSupport(v as LateralSupportType)}
+            />
+
+            {lateralSupport === 'unsupported' && (
+              <>
+                <InputField
+                  label="Unbraced Length (L)"
+                  value={unbracedLength}
+                  onChange={setUnbracedLength}
+                  unit="mm"
+                  min={0}
+                  step={100}
+                />
+                <InputField
+                  label="Moment Gradient Coefficient (ω₂)"
+                  value={omega2}
+                  onChange={setOmega2}
+                  unit=""
+                  min={1.0}
+                  max={2.5}
+                  step={0.1}
+                />
+                <p className="input-note">
+                  ω₂ = 1.0 for uniform moment. For moment gradient, ω₂ can be calculated based on moment distribution.
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -126,10 +178,21 @@ export function ChannelCapacity() {
         <div className="design-criteria full-width">
           <h3>Resistance Equations (CSA S16-19)</h3>
           <div className="criteria-grid">
-            <div className="criteria-item">
-              <span className="criteria-label">Moment (Elastic):</span>
-              <MathJax inline>{"\\(M_r = \\phi S_x F_y\\)"}</MathJax>
-            </div>
+            {lateralSupport === 'continuous' ? (
+              <div className="criteria-item">
+                <span className="criteria-label">Moment (Elastic):</span>
+                <MathJax inline>{"\\(M_r = \\phi S_x F_y\\)"}</MathJax>
+              </div>
+            ) : (
+              <>
+                <div className="criteria-item">
+                  <MathJax inline>{"\\(M_u > 0.67M_y: M_r = 1.15\\phi M_y(1 - 0.28M_y/M_u) \\leq \\phi M_y\\)"}</MathJax>
+                </div>
+                <div className="criteria-item">
+                  <MathJax inline>{"\\(M_u \\leq 0.67M_y: M_r = \\phi M_u\\)"}</MathJax>
+                </div>
+              </>
+            )}
             <div className="criteria-item">
               <span className="criteria-label">Shear:</span>
               <MathJax inline>{"\\(V_r = \\phi A_w (0.66 F_y)\\)"}</MathJax>
@@ -139,7 +202,12 @@ export function ChannelCapacity() {
               <MathJax inline>{"\\(T_r = \\phi A_g F_y\\)"}</MathJax>
             </div>
           </div>
-          <p className="criteria-note">φ = 0.9 (resistance factor). C-channels use elastic section modulus (Sx) for moment resistance.</p>
+          <p className="criteria-note">
+            φ = 0.9 (resistance factor).
+            {lateralSupport === 'continuous'
+              ? ' C-channels use elastic section modulus (Sx) for moment resistance.'
+              : ' My = Sx × Fy (yield moment using elastic section modulus).'}
+          </p>
         </div>
       </section>
 
@@ -155,7 +223,15 @@ export function ChannelCapacity() {
               <div className="capacity-details">
                 <span className="capacity-label">Moment Resistance</span>
                 <span className="capacity-value">{capacityResult.Mr.toFixed(1)} kN·m</span>
-                <span className="capacity-note">Using elastic modulus (Sx)</span>
+                {capacityResult.ltbResult ? (
+                  <span className="capacity-note">
+                    {capacityResult.ltbResult.governingCase === 'yielding' ? 'Yielding governs' :
+                     capacityResult.ltbResult.governingCase === 'inelastic_ltb' ? 'Inelastic LTB governs' :
+                     'Elastic LTB governs'}
+                  </span>
+                ) : (
+                  <span className="capacity-note">Using elastic modulus (Sx)</span>
+                )}
               </div>
             </div>
 
@@ -189,6 +265,7 @@ export function ChannelCapacity() {
           <ChannelCapacitySummary
             result={capacityResult}
             steelGrade={steelGrade}
+            lateralSupport={lateralSupport}
           />
         </section>
       )}

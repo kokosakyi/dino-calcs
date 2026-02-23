@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { MathJax } from 'better-react-mathjax';
-import type { ChannelDesignResult, SteelGrade, DeflectionResult } from '../types/steel';
+import type { ChannelDesignResult, SteelGrade, LateralSupportType, DeflectionResult } from '../types/steel';
 import { STEEL_PROPERTIES } from '../types/steel';
 import { formatNumber, checkChannelSectionClass, calculateActualDeflection } from '../utils/steelDesign';
 
@@ -9,13 +9,14 @@ interface ChannelDesignSummaryProps {
   factoredMoment: number;
   factoredShear: number;
   steelGrade: SteelGrade;
+  lateralSupport: LateralSupportType;
   deflectionResult?: DeflectionResult;
   span?: number;
   udlSLS?: number;
 }
 
-export function ChannelDesignSummary({ result, factoredMoment, factoredShear, steelGrade, deflectionResult, span, udlSLS }: ChannelDesignSummaryProps) {
-  const { section, Mr, Vr } = result;
+export function ChannelDesignSummary({ result, factoredMoment, factoredShear, steelGrade, lateralSupport, deflectionResult, span, udlSLS }: ChannelDesignSummaryProps) {
+  const { section, Mr, Vr, ltbResult } = result;
   const { Fy } = STEEL_PROPERTIES[steelGrade];
   const Sx = parseFloat(section.Sx) * 1000;
   const d = parseFloat(section.D);
@@ -23,6 +24,9 @@ export function ChannelDesignSummary({ result, factoredMoment, factoredShear, st
   const Aw = d * w;
   const sectionClass = checkChannelSectionClass(section, Fy);
   const Ix = parseFloat(section.Ix);
+  const Iy = parseFloat(section.Iy);
+  const J = parseFloat(section.J);
+  const Cw = parseFloat(section.Cw);
 
   // Calculate actual deflection if we have the necessary data
   const actualDeflection = (span && udlSLS) ? calculateActualDeflection(udlSLS, span, Ix) : undefined;
@@ -118,8 +122,20 @@ export function ChannelDesignSummary({ result, factoredMoment, factoredShear, st
                   <tbody>
                     <tr>
                       <td>Lateral Support</td>
-                      <td>Continuous</td>
+                      <td>{lateralSupport === 'continuous' ? 'Continuous' : 'Unsupported'}</td>
                     </tr>
+                    {lateralSupport === 'unsupported' && ltbResult && (
+                      <>
+                        <tr>
+                          <td>Unbraced Length (<MathJax dynamic inline>{"\\(L_u\\)"}</MathJax>)</td>
+                          <td>{formatNumber(ltbResult.unbracedLength, 0)} mm</td>
+                        </tr>
+                        <tr>
+                          <td>Moment Gradient (<MathJax dynamic inline>{"\\(\\omega_2\\)"}</MathJax>)</td>
+                          <td>{formatNumber(ltbResult.omega2, 2)}</td>
+                        </tr>
+                      </>
+                    )}
                     {deflectionResult && (
                       <tr>
                         <td>Deflection Limit</td>
@@ -271,26 +287,117 @@ export function ChannelDesignSummary({ result, factoredMoment, factoredShear, st
           </div>
 
           {/* Moment Resistance */}
-          <div className="summary-section">
-            <h3>Moment Resistance (CSA S16-19 Cl. 13.5)</h3>
-            <p className="support-type">Continuous lateral support to compression flange</p>
-            <p className="class-note">C-channels use elastic section modulus (Sₓ) for moment resistance</p>
-            <div className="equation-block">
-              <MathJax dynamic>
-                {`\\[M_r = \\phi S_x F_y\\]`}
-              </MathJax>
-              <MathJax dynamic>
-                {`\\[M_r = 0.9 \\times ${formatNumber(Sx, 0)} \\text{ mm}^3 \\times ${Fy} \\text{ MPa}\\]`}
-              </MathJax>
-              <MathJax dynamic>
-                {`\\[M_r = ${formatNumber(Mr)} \\text{ kN·m}\\]`}
-              </MathJax>
+          {lateralSupport === 'continuous' ? (
+            <div className="summary-section">
+              <h3>Moment Resistance (CSA S16-19 Cl. 13.5)</h3>
+              <p className="support-type">Continuous lateral support to compression flange</p>
+              <p className="class-note">C-channels use elastic section modulus (Sₓ) for moment resistance</p>
+              <div className="equation-block">
+                <MathJax dynamic>
+                  {`\\[M_r = \\phi S_x F_y\\]`}
+                </MathJax>
+                <MathJax dynamic>
+                  {`\\[M_r = 0.9 \\times ${formatNumber(Sx, 0)} \\text{ mm}^3 \\times ${Fy} \\text{ MPa}\\]`}
+                </MathJax>
+                <MathJax dynamic>
+                  {`\\[M_r = ${formatNumber(Mr)} \\text{ kN·m}\\]`}
+                </MathJax>
+              </div>
+              <div className={`check-result ${factoredMoment <= Mr ? 'pass' : 'fail'}`}>
+                <MathJax dynamic inline>{`\\(M_f = ${formatNumber(factoredMoment)} \\text{ kN·m} ${factoredMoment <= Mr ? '\\leq' : '>'} M_r = ${formatNumber(Mr)} \\text{ kN·m}\\)`}</MathJax>
+                <span className="check-icon">{factoredMoment <= Mr ? '✓' : '✗'}</span>
+              </div>
             </div>
-            <div className={`check-result ${factoredMoment <= Mr ? 'pass' : 'fail'}`}>
-              <MathJax dynamic inline>{`\\(M_f = ${formatNumber(factoredMoment)} \\text{ kN·m} ${factoredMoment <= Mr ? '\\leq' : '>'} M_r = ${formatNumber(Mr)} \\text{ kN·m}\\)`}</MathJax>
-              <span className="check-icon">{factoredMoment <= Mr ? '✓' : '✗'}</span>
+          ) : ltbResult && (
+            <div className="summary-section">
+              <h3>Moment Resistance (CSA S16-19 Cl. 13.6)</h3>
+              <p className="support-type">Laterally unsupported beam segment</p>
+
+              <div className="ltb-subsection">
+                <h4>Yield Moment</h4>
+                <div className="equation-block">
+                  <MathJax dynamic>
+                    {`\\[M_y = S_x F_y = ${formatNumber(Sx, 0)} \\times ${Fy} / 10^6 = ${formatNumber(ltbResult.My)} \\text{ kN·m}\\]`}
+                  </MathJax>
+                </div>
+              </div>
+
+              <div className="ltb-subsection">
+                <h4>Critical Elastic Moment</h4>
+                <div className="equation-block">
+                  <MathJax dynamic>
+                    {`\\[M_u = \\frac{\\omega_2 \\pi}{L}\\sqrt{EI_yGJ + \\left(\\frac{\\pi E}{L}\\right)^2 I_y C_w}\\]`}
+                  </MathJax>
+                  <div className="parameter-values">
+                    <p>where:</p>
+                    <MathJax dynamic inline>{`\\(\\omega_2 = ${formatNumber(ltbResult.omega2, 2)}\\)`}</MathJax>,{' '}
+                    <MathJax dynamic inline>{`\\(L = ${formatNumber(ltbResult.unbracedLength, 0)} \\text{ mm}\\)`}</MathJax>,{' '}
+                    <MathJax dynamic inline>{`\\(E = 200{,}000 \\text{ MPa}\\)`}</MathJax>,{' '}
+                    <MathJax dynamic inline>{`\\(G = 77{,}000 \\text{ MPa}\\)`}</MathJax>
+                    <br />
+                    <MathJax dynamic inline>{`\\(I_y = ${Iy} \\times 10^6 \\text{ mm}^4\\)`}</MathJax>,{' '}
+                    <MathJax dynamic inline>{`\\(J = ${J} \\times 10^3 \\text{ mm}^4\\)`}</MathJax>,{' '}
+                    <MathJax dynamic inline>{`\\(C_w = ${Cw} \\times 10^9 \\text{ mm}^6\\)`}</MathJax>
+                  </div>
+                  <MathJax dynamic>
+                    {`\\[M_u = ${formatNumber(ltbResult.Mu)} \\text{ kN·m}\\]`}
+                  </MathJax>
+                </div>
+              </div>
+
+              <div className="ltb-subsection">
+                <h4>Factored Moment Resistance</h4>
+                <div className="equation-block">
+                  <MathJax dynamic>
+                    {`\\[0.67 M_y = 0.67 \\times ${formatNumber(ltbResult.My)} = ${formatNumber(0.67 * ltbResult.My)} \\text{ kN·m}\\]`}
+                  </MathJax>
+
+                  {ltbResult.governingCase === 'elastic_ltb' ? (
+                    <>
+                      <div className="case-indicator">
+                        <MathJax dynamic inline>{`\\(M_u = ${formatNumber(ltbResult.Mu)} \\leq 0.67M_y = ${formatNumber(0.67 * ltbResult.My)}\\)`}</MathJax>
+                        <span> → Elastic LTB governs</span>
+                      </div>
+                      <MathJax dynamic>
+                        {`\\[M_r = \\phi M_u = 0.9 \\times ${formatNumber(ltbResult.Mu)} = ${formatNumber(Mr)} \\text{ kN·m}\\]`}
+                      </MathJax>
+                    </>
+                  ) : ltbResult.governingCase === 'inelastic_ltb' ? (
+                    <>
+                      <div className="case-indicator">
+                        <MathJax dynamic inline>{`\\(M_u = ${formatNumber(ltbResult.Mu)} > 0.67M_y = ${formatNumber(0.67 * ltbResult.My)}\\)`}</MathJax>
+                        <span> → Inelastic LTB governs</span>
+                      </div>
+                      <MathJax dynamic>
+                        {`\\[M_r = 1.15\\phi M_y\\left(1 - \\frac{0.28 M_y}{M_u}\\right)\\]`}
+                      </MathJax>
+                      <MathJax dynamic>
+                        {`\\[M_r = 1.15 \\times 0.9 \\times ${formatNumber(ltbResult.My)}\\left(1 - \\frac{0.28 \\times ${formatNumber(ltbResult.My)}}{${formatNumber(ltbResult.Mu)}}\\right)\\]`}
+                      </MathJax>
+                      <MathJax dynamic>
+                        {`\\[M_r = ${formatNumber(Mr)} \\text{ kN·m}\\]`}
+                      </MathJax>
+                    </>
+                  ) : (
+                    <>
+                      <div className="case-indicator">
+                        <MathJax dynamic inline>{`\\(M_u = ${formatNumber(ltbResult.Mu)} > 0.67M_y\\)`}</MathJax>
+                        <span> → Yielding governs (Mr capped at φMy)</span>
+                      </div>
+                      <MathJax dynamic>
+                        {`\\[M_r = \\phi M_y = 0.9 \\times ${formatNumber(ltbResult.My)} = ${formatNumber(Mr)} \\text{ kN·m}\\]`}
+                      </MathJax>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className={`check-result ${factoredMoment <= Mr ? 'pass' : 'fail'}`}>
+                <MathJax dynamic inline>{`\\(M_f = ${formatNumber(factoredMoment)} \\text{ kN·m} ${factoredMoment <= Mr ? '\\leq' : '>'} M_r = ${formatNumber(Mr)} \\text{ kN·m}\\)`}</MathJax>
+                <span className="check-icon">{factoredMoment <= Mr ? '✓' : '✗'}</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Shear Resistance */}
           <div className="summary-section">

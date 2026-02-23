@@ -9,9 +9,10 @@ interface ChannelResultCardProps {
   isSelected: boolean;
   onSelect: () => void;
   steelGrade: SteelGrade;
+  lateralSupport: 'continuous' | 'unsupported';
 }
 
-export function ChannelResultCard({ result, rank, isSelected, onSelect, steelGrade }: ChannelResultCardProps) {
+export function ChannelResultCard({ result, rank, isSelected, onSelect, steelGrade, lateralSupport }: ChannelResultCardProps) {
   const { section, Mr, Vr, momentUtilization, shearUtilization, deflectionUtilization } = result;
   const { Fy } = STEEL_PROPERTIES[steelGrade];
   const sectionClass = checkChannelSectionClass(section, Fy);

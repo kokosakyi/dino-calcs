@@ -269,7 +269,17 @@ export interface ChannelDesignResult {
   momentUtilization: number;  // Mf/Mr ratio
   shearUtilization: number;   // Vf/Vr ratio
   isAdequate: boolean;
+  ltbResult?: ChannelLTBResult;  // LTB calculation details (when laterally unsupported)
   deflectionUtilization?: number;  // Ix_required/Ix ratio (for UDL/NBC modes)
+}
+
+export interface ChannelLTBResult {
+  Mu: number;               // Critical elastic moment (kN·m)
+  My: number;               // Yield moment = Sx × Fy (kN·m)
+  Mr: number;               // Factored moment resistance (kN·m)
+  governingCase: 'yielding' | 'inelastic_ltb' | 'elastic_ltb';
+  omega2: number;
+  unbracedLength: number;   // L in mm
 }
 
 export interface SDesignResult {
@@ -304,6 +314,36 @@ export const STEEL_PROPERTIES: Record<SteelGrade, { Fy: number; Fu: number }> = 
   '350W': { Fy: 350, Fu: 450 },
   '345W': { Fy: 345, Fu: 450 },
 };
+
+// Column design types
+export type EffectiveLengthFactor = 0.65 | 0.80 | 1.0 | 1.2 | 2.0;
+export type BucklingAxis = 'strong' | 'weak';
+
+export interface ColumnDesignInputs {
+  factoredAxialLoad: number;   // Cf in kN
+  effectiveLengthFactor: number; // K
+  unbracedLength: number;      // L in mm
+  steelGrade: SteelGrade;
+  bucklingAxis: BucklingAxis;
+  sectionFilters?: SectionFilters;
+}
+
+export interface ColumnBucklingResult {
+  Fe: number;        // Euler buckling stress (MPa)
+  lambda: number;    // Non-dimensional slenderness ratio
+  Cr: number;        // Factored compressive resistance (kN)
+  kL: number;        // Effective length KL (mm)
+  r: number;         // Governing radius of gyration (mm)
+  kLr: number;       // Slenderness ratio KL/r
+}
+
+export interface ColumnDesignResult {
+  section: WSection;
+  Cr: number;        // Factored compressive resistance (kN)
+  axialUtilization: number;  // Cf/Cr ratio
+  isAdequate: boolean;
+  bucklingResult: ColumnBucklingResult;
+}
 
 // Beam design modes
 export type BeamDesignMode = 'direct' | 'udl' | 'nbc';

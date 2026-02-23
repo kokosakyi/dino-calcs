@@ -5,7 +5,7 @@ import { ChannelResultCard } from '../components/ChannelResultCard';
 import { ChannelDesignSummary } from '../components/ChannelDesignSummary';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { findOptimalChannelSection, calculateSimplySupported, calculateRequiredIx, calculateNBCCombinations } from '../utils/steelDesign';
-import type { CSection, SteelGrade, ChannelDesignResult, SectionFilters, BeamDesignMode, DeflectionResult, NBCCombinationResult } from '../types/steel';
+import type { CSection, SteelGrade, ChannelDesignResult, LateralSupportType, SectionFilters, BeamDesignMode, DeflectionResult, NBCCombinationResult } from '../types/steel';
 import cSections from '../assets/C_section.json';
 
 export function ChannelBeamDesign() {
@@ -31,6 +31,9 @@ export function ChannelBeamDesign() {
 
   // Common inputs
   const [steelGrade, setSteelGrade] = useState<SteelGrade>('350W');
+  const [lateralSupport, setLateralSupport] = useState<LateralSupportType>('continuous');
+  const [unbracedLength, setUnbracedLength] = useState<number>(3000);
+  const [omega2, setOmega2] = useState<number>(1.0);
   const [selectedResult, setSelectedResult] = useState<ChannelDesignResult | null>(null);
   const [showAllResults, setShowAllResults] = useState(false);
 
@@ -96,12 +99,14 @@ export function ChannelBeamDesign() {
         factoredMoment: Mf || 0,
         factoredShear: Vf || 0,
         steelGrade,
-        lateralSupport: 'continuous', // Channels typically require continuous lateral support
+        lateralSupport,
+        unbracedLength: lateralSupport === 'unsupported' ? unbracedLength : undefined,
+        omega2: lateralSupport === 'unsupported' ? omega2 : undefined,
         sectionFilters,
       },
       deflectionResult
     );
-  }, [calculatedLoads, steelGrade, sectionFilters]);
+  }, [calculatedLoads, steelGrade, lateralSupport, unbracedLength, omega2, sectionFilters]);
 
   const displayedResults = showAllResults ? results : results.slice(0, 6);
   const optimalResult = results[0] || null;
@@ -291,9 +296,40 @@ export function ChannelBeamDesign() {
 
           <div className="input-group">
             <h3>Lateral Support</h3>
-            <p className="input-note">
-              C-channels require continuous lateral support to the compression flange for beam applications.
-            </p>
+            <CustomDropdown
+              label="Compression Flange Support"
+              options={[
+                { id: 'continuous', label: 'Continuous Lateral Support' },
+                { id: 'unsupported', label: 'Laterally Unsupported' },
+              ]}
+              value={lateralSupport}
+              onChange={(v) => setLateralSupport(v as LateralSupportType)}
+            />
+
+            {lateralSupport === 'unsupported' && (
+              <>
+                <InputField
+                  label="Unbraced Length (L)"
+                  value={unbracedLength}
+                  onChange={setUnbracedLength}
+                  unit="mm"
+                  min={0}
+                  step={100}
+                />
+                <InputField
+                  label="Moment Gradient Coefficient (ω₂)"
+                  value={omega2}
+                  onChange={setOmega2}
+                  unit=""
+                  min={1.0}
+                  max={2.5}
+                  step={0.1}
+                />
+                <p className="input-note">
+                  ω₂ = 1.0 for uniform moment. For moment gradient, ω₂ can be calculated based on moment distribution.
+                </p>
+              </>
+            )}
           </div>
 
         </div>
@@ -374,10 +410,21 @@ export function ChannelBeamDesign() {
         <div className="design-criteria full-width">
           <h3>Design Criteria</h3>
           <div className="criteria-grid">
-            <div className="criteria-item">
-              <span className="criteria-label">Moment (Elastic):</span>
-              <MathJax inline>{"\\(M_r = \\phi S_x F_y\\)"}</MathJax>
-            </div>
+            {lateralSupport === 'continuous' ? (
+              <div className="criteria-item">
+                <span className="criteria-label">Moment (Elastic):</span>
+                <MathJax inline>{"\\(M_r = \\phi S_x F_y\\)"}</MathJax>
+              </div>
+            ) : (
+              <>
+                <div className="criteria-item">
+                  <MathJax inline>{"\\(M_u > 0.67M_y: M_r = 1.15\\phi M_y(1 - 0.28M_y/M_u) \\leq \\phi M_y\\)"}</MathJax>
+                </div>
+                <div className="criteria-item">
+                  <MathJax inline>{"\\(M_u \\leq 0.67M_y: M_r = \\phi M_u\\)"}</MathJax>
+                </div>
+              </>
+            )}
             <div className="criteria-item">
               <MathJax inline>{"\\(V_f \\leq V_r = \\phi A_w (0.66 F_y)\\)"}</MathJax>
             </div>
@@ -388,7 +435,12 @@ export function ChannelBeamDesign() {
               </div>
             )}
           </div>
-          <p className="criteria-note">φ = 0.9 (resistance factor). C-channels use elastic section modulus (Sx) for moment resistance.</p>
+          <p className="criteria-note">
+            φ = 0.9 (resistance factor).
+            {lateralSupport === 'continuous'
+              ? ' C-channels use elastic section modulus (Sx) for moment resistance.'
+              : ' My = Sx × Fy (yield moment using elastic section modulus).'}
+          </p>
         </div>
 
         {/* Section Dimension Filters */}
@@ -491,6 +543,7 @@ export function ChannelBeamDesign() {
             factoredMoment={calculatedLoads.Mf}
             factoredShear={calculatedLoads.Vf}
             steelGrade={steelGrade}
+            lateralSupport={lateralSupport}
             deflectionResult={calculatedLoads.deflectionResult}
             span={designMode !== 'direct' ? span : undefined}
             udlSLS={designMode === 'udl' ? udlSLS : calculatedLoads.nbcResult?.wSLS}
@@ -520,6 +573,7 @@ export function ChannelBeamDesign() {
                   isSelected={selectedResult?.section.Dsg === result.section.Dsg}
                   onSelect={() => setSelectedResult(result)}
                   steelGrade={steelGrade}
+                  lateralSupport={lateralSupport}
                 />
               ))}
             </div>
