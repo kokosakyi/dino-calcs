@@ -1141,7 +1141,7 @@ export function calculateAngleMomentResistance(
 export function calculateAngleShearResistance(
   section: LSection,
   Fy: number,
-  axis: 'x' | 'y'
+  _axis: 'x' | 'y'
 ): number {
   // TODO: Replace with accurate shear area calculation for angles
   // This is a simplified placeholder calculation
@@ -1210,10 +1210,6 @@ export function findOptimalAngleSection(
     const Vrx = calculateAngleShearResistance(section, Fy, 'x');
     const Vry = calculateAngleShearResistance(section, Fy, 'y');
 
-    // Check adequacy based on design axis
-    const Mr_design = designAxis === 'x' ? Mrx : Mry;
-    const Vr_design = designAxis === 'x' ? Vrx : Vry;
-    
     const momentUtilizationX = factoredMoment / Mrx;
     const momentUtilizationY = factoredMoment / Mry;
     const shearUtilizationX = factoredShear / Vrx;

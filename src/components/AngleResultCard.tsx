@@ -1,6 +1,5 @@
 import { MathJax } from 'better-react-mathjax';
 import type { AngleDesignResult, SteelGrade } from '../types/steel';
-import { STEEL_PROPERTIES } from '../types/steel';
 import { formatNumber, utilizationPercent } from '../utils/steelDesign';
 
 interface AngleResultCardProps {
@@ -8,11 +7,11 @@ interface AngleResultCardProps {
   rank: number;
   isSelected: boolean;
   onSelect: () => void;
-  steelGrade: SteelGrade;
-  designAxis: 'x' | 'y';
+  steelGrade?: SteelGrade;
+  designAxis?: 'x' | 'y';
 }
 
-export function AngleResultCard({ result, rank, isSelected, onSelect, steelGrade, designAxis }: AngleResultCardProps) {
+export function AngleResultCard({ result, rank, isSelected, onSelect }: AngleResultCardProps) {
   const { section, Mrx, Mry, Vrx, Vry, momentUtilizationX, momentUtilizationY, shearUtilizationX, shearUtilizationY, deflectionUtilization } = result;
 
   const getUtilizationColor = (util: number) => {
@@ -27,7 +26,7 @@ export function AngleResultCard({ result, rank, isSelected, onSelect, steelGrade
       onClick={onSelect}
     >
       {rank === 1 && <div className="optimal-badge">Most Economical</div>}
-      
+
       <div className="placeholder-indicator">
         <span className="placeholder-tag">Simplified Formulas</span>
       </div>

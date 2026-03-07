@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { MathJax } from 'better-react-mathjax';
 import { CustomDropdown } from '../components/CustomDropdown';
-import { InputField } from '../components/InputField';
 import { AngleCapacitySummary } from '../components/AngleCapacitySummary';
 import { 
   calculateAngleMomentResistance, 

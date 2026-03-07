@@ -11,7 +11,7 @@ interface BaseplateDesignSummaryProps {
 
 export function BaseplateDesignSummary({ result, inputs, sectionDesignation }: BaseplateDesignSummaryProps) {
   const { B, N, t_bp, A1, A2, sqrtA2A1, phi_pp, pp_max, m, n, lambda_cant, eccentricity, Mf_per_mm, t_bp_req, bearingUtilization } = result;
-  const { d_col, b_f, Cf, Mx, My, Fy_bp, fc, B_conc, N_conc, grout, overhang, columnType } = inputs;
+  const { d_col, b_f, Cf, Mx, My, Fy_bp, fc, B_conc, N_conc, grout, columnType } = inputs;
 
   const handlePrint = useCallback(() => {
     setTimeout(() => { window.print(); }, 100);
