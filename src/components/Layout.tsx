@@ -83,6 +83,12 @@ export function Layout() {
                 S-Sections
               </li>
             </NavLink>
+            <NavLink to="/steel/angle-beam-design" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMobileMenuOpen(false)}>
+              <li>
+                <span className="nav-icon">∠</span>
+                L-Angles
+              </li>
+            </NavLink>
           </ul>
         </div>
 
@@ -105,6 +111,12 @@ export function Layout() {
               <li>
                 <span className="nav-icon">⌶</span>
                 S-Sections
+              </li>
+            </NavLink>
+            <NavLink to="/steel/angle-capacity" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMobileMenuOpen(false)}>
+              <li>
+                <span className="nav-icon">∠</span>
+                L-Angles
               </li>
             </NavLink>
           </ul>
@@ -135,12 +147,14 @@ export function Layout() {
         </div>
 
         <div className="nav-section">
-          <h3>Coming Soon</h3>
-          <ul className="disabled">
-            <li>
-              <span className="nav-icon">⊞</span>
-              Connections
-            </li>
+          <h3>Baseplate Design</h3>
+          <ul>
+            <NavLink to="/steel/baseplate-design" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMobileMenuOpen(false)}>
+              <li>
+                <span className="nav-icon">▭</span>
+                W &amp; HSS Sections
+              </li>
+            </NavLink>
           </ul>
         </div>
 

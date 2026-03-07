@@ -441,6 +441,18 @@ body {
   font-weight: 600;
 }
 
+.section-info-mini {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
 .input-field {
   margin-bottom: 0.875rem;
 }

@@ -6,11 +6,14 @@ import { Home } from './pages/Home';
 import { BeamDesign } from './pages/BeamDesign';
 import { ChannelBeamDesign } from './pages/ChannelBeamDesign';
 import { SBeamDesign } from './pages/SBeamDesign';
+import { AngleBeamDesign } from './pages/AngleBeamDesign';
 import { SectionCapacity } from './pages/SectionCapacity';
 import { ChannelCapacity } from './pages/ChannelCapacity';
 import { SCapacity } from './pages/SCapacity';
+import { AngleCapacity } from './pages/AngleCapacity';
 import { SectionBrowser } from './pages/SectionBrowser';
 import { ColumnDesign } from './pages/ColumnDesign';
+import { BaseplateDesign } from './pages/BaseplateDesign';
 import './App.css';
 
 const mathJaxConfig = {
@@ -37,10 +40,13 @@ function App() {
                 <Route path="beam-design" element={<BeamDesign />} />
                 <Route path="channel-beam-design" element={<ChannelBeamDesign />} />
                 <Route path="s-beam-design" element={<SBeamDesign />} />
+                <Route path="angle-beam-design" element={<AngleBeamDesign />} />
                 <Route path="section-capacity" element={<SectionCapacity />} />
                 <Route path="channel-capacity" element={<ChannelCapacity />} />
                 <Route path="s-capacity" element={<SCapacity />} />
+                <Route path="angle-capacity" element={<AngleCapacity />} />
                 <Route path="column-design" element={<ColumnDesign />} />
+                <Route path="baseplate-design" element={<BaseplateDesign />} />
                 <Route path="section-browser" element={<SectionBrowser />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

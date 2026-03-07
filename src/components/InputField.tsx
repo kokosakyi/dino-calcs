@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
+
 interface InputFieldProps {
-  label: string;
+  label: ReactNode;
   value: number | string;
   onChange: (value: number) => void;
   unit: string;

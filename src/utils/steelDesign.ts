@@ -1,5 +1,6 @@
-import type { WSection, CSection, SSection, DesignInputs, DesignResult, ChannelDesignResult, SDesignResult, ColumnDesignInputs, ColumnDesignResult, ColumnBucklingResult, SectionClassification, LateralTorsionalBucklingResult, ChannelLTBResult, DeflectionResult, NBCLoadInputs, NBCCombinationResult } from '../types/steel';
+import type { WSection, CSection, SSection, LSection, DesignInputs, DesignResult, ChannelDesignResult, SDesignResult, AngleDesignResult, ColumnDesignInputs, ColumnDesignResult, ColumnBucklingResult, SectionClassification, LateralTorsionalBucklingResult, ChannelLTBResult, DeflectionResult, NBCLoadInputs, NBCCombinationResult, BaseplateDesignInputs, BaseplateDesignResult } from '../types/steel';
 import { STEEL_PROPERTIES } from '../types/steel';
+import type { SteelGrade } from '../types/steel';
 
 // CISC S16-19 resistance factor for steel
 const PHI = 0.9;
@@ -1091,3 +1092,315 @@ export function findOptimalColumnSection(
   results.sort((a, b) => parseFloat(a.section.Mass) - parseFloat(b.section.Mass));
   return results;
 }
+
+// ============================================================================
+// ANGLE (L-SECTION) DESIGN - PLACEHOLDER FORMULAS
+// ============================================================================
+
+/**
+ * Calculate moment resistance for an angle section
+ * TODO: Replace with accurate CSA S16-19 formula for angles
+ * 
+ * PLACEHOLDER: Using simplified elastic formula
+ * Mr = φ × Sx × Fy
+ * 
+ * @param section - The angle section
+ * @param Fy - Yield strength (MPa)
+ * @param axis - Axis of bending ('x' or 'y')
+ * @returns Moment resistance in kN·m
+ */
+export function calculateAngleMomentResistance(
+  section: LSection,
+  Fy: number,
+  axis: 'x' | 'y'
+): number {
+  // TODO: Replace with accurate CSA S16-19 formula for angles
+  // This is a simplified placeholder calculation
+  
+  const Sx = axis === 'x' ? parseFloat(section.Sx) : parseFloat(section.Sy);
+  const Sx_mm3 = Sx * 1000; // Convert from ×10³ mm³ to mm³
+  
+  // Mr in N·mm, convert to kN·m
+  const Mr = (PHI * Sx_mm3 * Fy) / 1e6;
+  
+  return Mr;
+}
+
+/**
+ * Calculate shear resistance for an angle section
+ * TODO: Replace with accurate shear area calculation for angles
+ * 
+ * PLACEHOLDER: Using simplified formula assuming half area resists shear
+ * Vr = φ × (A/2) × 0.66 × Fy
+ * 
+ * @param section - The angle section
+ * @param Fy - Yield strength (MPa)
+ * @param axis - Axis of shear ('x' or 'y')
+ * @returns Shear resistance in kN
+ */
+export function calculateAngleShearResistance(
+  section: LSection,
+  Fy: number,
+  axis: 'x' | 'y'
+): number {
+  // TODO: Replace with accurate shear area calculation for angles
+  // This is a simplified placeholder calculation
+  
+  const A = parseFloat(section.A); // mm²
+  
+  // Approximate shear area as half the total area
+  // In reality, shear area depends on leg orientation relative to shear direction
+  const Av = A / 2;
+  
+  // Vr in N, convert to kN
+  const Vr = (PHI * Av * 0.66 * Fy) / 1000;
+  
+  return Vr;
+}
+
+/**
+ * Calculate tensile resistance for an angle section
+ * Per CSA S16-19 Clause 13.2:
+ * Tr = φ × Ag × Fy
+ * 
+ * Note: This assumes gross area. For angles with holes, use net area.
+ * 
+ * @param section - The angle section
+ * @param Fy - Yield strength (MPa)
+ * @returns Tensile resistance in kN
+ */
+export function calculateAngleTensileResistance(
+  section: LSection,
+  Fy: number
+): number {
+  const Ag = parseFloat(section.A); // mm²
+  
+  // Tr in N, convert to kN
+  const Tr = (PHI * Ag * Fy) / 1000;
+  
+  return Tr;
+}
+
+/**
+ * Find the most economical angle section for beam design
+ * 
+ * @param sections - Array of angle sections
+ * @param factoredMoment - Factored moment (kN·m)
+ * @param factoredShear - Factored shear (kN)
+ * @param steelGrade - Steel grade
+ * @param designAxis - Primary design axis ('x' or 'y')
+ * @param deflectionResult - Optional deflection requirements
+ * @returns Array of suitable angle sections sorted by mass
+ */
+export function findOptimalAngleSection(
+  sections: LSection[],
+  factoredMoment: number,
+  factoredShear: number,
+  steelGrade: SteelGrade,
+  designAxis: 'x' | 'y',
+  deflectionResult?: DeflectionResult
+): AngleDesignResult[] {
+  const { Fy } = STEEL_PROPERTIES[steelGrade];
+  const results: AngleDesignResult[] = [];
+
+  for (const section of sections) {
+    // Calculate resistances for both axes
+    const Mrx = calculateAngleMomentResistance(section, Fy, 'x');
+    const Mry = calculateAngleMomentResistance(section, Fy, 'y');
+    const Vrx = calculateAngleShearResistance(section, Fy, 'x');
+    const Vry = calculateAngleShearResistance(section, Fy, 'y');
+
+    // Check adequacy based on design axis
+    const Mr_design = designAxis === 'x' ? Mrx : Mry;
+    const Vr_design = designAxis === 'x' ? Vrx : Vry;
+    
+    const momentUtilizationX = factoredMoment / Mrx;
+    const momentUtilizationY = factoredMoment / Mry;
+    const shearUtilizationX = factoredShear / Vrx;
+    const shearUtilizationY = factoredShear / Vry;
+
+    const momentUtilization = designAxis === 'x' ? momentUtilizationX : momentUtilizationY;
+    const shearUtilization = designAxis === 'x' ? shearUtilizationX : shearUtilizationY;
+
+    let isAdequate = momentUtilization <= 1.0 && shearUtilization <= 1.0;
+    let deflectionUtilization: number | undefined;
+
+    // Check deflection if required
+    if (deflectionResult) {
+      const Ix = parseFloat(section.Ix); // Already in ×10⁶ mm⁴
+      deflectionUtilization = deflectionResult.requiredIx / Ix;
+      if (deflectionUtilization > 1.0) {
+        isAdequate = false;
+      }
+    }
+
+    if (isAdequate) {
+      results.push({
+        section,
+        Mrx,
+        Mry,
+        Vrx,
+        Vry,
+        momentUtilizationX,
+        momentUtilizationY,
+        shearUtilizationX,
+        shearUtilizationY,
+        isAdequate,
+        deflectionUtilization,
+      });
+    }
+  }
+
+  // Sort by mass (most economical first)
+  results.sort((a, b) => parseFloat(a.section.Mass) - parseFloat(b.section.Mass));
+
+  return results;
+}
+
+// ============================================================================
+// BASEPLATE DESIGN - CSA S16-19 / CSA A23.3-19
+// ============================================================================
+
+const PHI_C = 0.65;   // Concrete resistance factor
+const ALPHA_1 = 0.85; // Stress block factor
+
+/**
+ * Design a steel baseplate for a given column and loading.
+ * Iterates plate dimensions (B × N) and thickness (t_bp) until convergence.
+ * Handles axial compression with optional uniaxial eccentricity.
+ *
+ * CSA S16-19 for plate bending, CSA A23.3-19 for concrete bearing.
+ */
+export function calculateBaseplateDesign(inputs: BaseplateDesignInputs): BaseplateDesignResult {
+  const {
+    d_col, b_f, Cf, Mx, My,
+    Fy_bp, fc, B_conc, N_conc, grout, overhang, columnType,
+    B_plate: userB, N_plate: userN,
+  } = inputs;
+
+  const autoSize = Math.max(d_col, b_f) + 2 * overhang;
+  let B = (userB && userB > 0) ? userB : autoSize;
+  let N_plate = (userN && userN > 0) ? userN : autoSize;
+  let t_bp = 20;
+  let A1 = B * N_plate;
+
+  const B_eff = B_conc + 2 * grout;
+  const N_eff = N_conc + 2 * grout;
+
+  const maxIters = 20;
+  let converged = false;
+  let iter = 0;
+  let pp_max = 0;
+  let m = 0;
+  let n_cant = 0;
+  let lambda_cant = 0;
+  let eccentricity = 0;
+  let A2 = 0;
+  let sqrtA2A1 = 1;
+  let phi_pp = 0;
+  let Mf_per_mm = 0;
+  let t_bp_req = 0;
+
+  if (Cf <= 0) {
+    const B_init = Math.round(B / 10) * 10;
+    const N_init = Math.round(N_plate / 10) * 10;
+    return {
+      B: B_init, N: N_init, t_bp: 20,
+      A1: B_init * N_init, A2: B_eff * N_eff,
+      sqrtA2A1: 1, phi_pp: 0, pp_max: 0,
+      m: 0, n: 0, lambda_cant: 0, eccentricity: 0,
+      Mf_per_mm: 0, t_bp_req: 0,
+      bearingUtilization: 0,
+      status: 'eccentric_tension', iterations: 0, isAdequate: false,
+    };
+  }
+
+  while (!converged && iter < maxIters) {
+    iter++;
+    const prevB = B;
+    const prevN = N_plate;
+    const prevT = t_bp;
+
+    A1 = B * N_plate;
+    A2 = Math.min(B_eff * N_eff, 4 * A1);
+    sqrtA2A1 = Math.min(Math.sqrt(A2 / A1), 2.0);
+    phi_pp = PHI_C * ALPHA_1 * fc * sqrtA2A1;
+
+    eccentricity = 0;
+    if (Cf > 0) {
+      if (Mx > 0) eccentricity = Math.max(eccentricity, (Mx / Cf) * 1000);
+      if (My > 0) eccentricity = Math.max(eccentricity, (My / Cf) * 1000);
+    }
+
+    if (eccentricity <= N_plate / 6) {
+      pp_max = (Cf * 1000) / A1;
+    } else {
+      const y = N_plate / 2 - eccentricity;
+      if (y <= 0) {
+        const B_r = Math.round(B / 10) * 10;
+        const N_r = Math.round(N_plate / 10) * 10;
+        return {
+          B: B_r, N: N_r, t_bp,
+          A1, A2, sqrtA2A1, phi_pp, pp_max: 0,
+          m: 0, n: 0, lambda_cant: 0, eccentricity,
+          Mf_per_mm: 0, t_bp_req: 0,
+          bearingUtilization: 0,
+          status: 'eccentric_tension', iterations: iter, isAdequate: false,
+        };
+      }
+      pp_max = (2 * Cf * 1000) / (B * y);
+    }
+
+    const A1_req = (Cf * 1000) / phi_pp;
+    if (A1 < A1_req * 1.05) {
+      const scale = Math.sqrt(A1_req / A1) * 1.05;
+      B *= scale;
+      N_plate *= scale;
+      continue;
+    }
+
+    if (columnType === 'W') {
+      m = (N_plate - 0.95 * d_col) / 2;
+      n_cant = (B - 0.80 * b_f) / 2;
+    } else {
+      m = (N_plate - 0.95 * d_col) / 2;
+      n_cant = (B - 0.95 * b_f) / 2;
+    }
+    lambda_cant = Math.max(m, n_cant);
+
+    Mf_per_mm = pp_max * (lambda_cant * lambda_cant) / 2;
+    const Z_req = Mf_per_mm / (PHI * Fy_bp);
+    t_bp_req = Math.sqrt(4 * Z_req);
+    t_bp = Math.max(t_bp, Math.round((t_bp_req * 1.1) / 5) * 5);
+
+    const sizeChanged = Math.abs(B - prevB) > 1 || Math.abs(N_plate - prevN) > 1;
+    const thickChanged = Math.abs(t_bp - prevT) > 1;
+
+    if (!sizeChanged && !thickChanged) {
+      converged = true;
+    }
+  }
+
+  B = Math.round(B / 10) * 10;
+  N_plate = Math.round(N_plate / 10) * 10;
+  t_bp = Math.max(Math.round(t_bp / 5) * 5, 10);
+  A1 = B * N_plate;
+
+  A2 = Math.min(B_eff * N_eff, 4 * A1);
+  sqrtA2A1 = Math.min(Math.sqrt(A2 / A1), 2.0);
+  phi_pp = PHI_C * ALPHA_1 * fc * sqrtA2A1;
+  pp_max = (Cf * 1000) / A1;
+
+  const bearingUtilization = phi_pp > 0 ? pp_max / phi_pp : 0;
+
+  return {
+    B, N: N_plate, t_bp, A1, A2, sqrtA2A1, phi_pp, pp_max,
+    m, n: n_cant, lambda_cant, eccentricity,
+    Mf_per_mm, t_bp_req,
+    bearingUtilization,
+    status: converged ? 'converged' : 'not_converged',
+    iterations: iter,
+    isAdequate: converged && bearingUtilization <= 1.0,
+  };
+}
+

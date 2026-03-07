@@ -112,6 +112,44 @@ export interface SSection {
   Wt_i: string;     // Imperial weight (lb/ft)
 }
 
+// L-Section (Angle) properties from CISC Handbook
+export interface LSection {
+  Prp: string;      // Preferred section indicator
+  Dsg: string;      // Designation (e.g., "L203x203x29")
+  Avl: string;      // Availability
+  Shp: string;      // Shape type
+  Grp: string;      // Group
+  D: string;        // Leg depth (mm)
+  B: string;        // Leg width (mm)
+  T: string;        // Thickness (mm)
+  BT: string;       // b/t ratio
+  DT: string;       // d/t ratio
+  K: string;        // k dimension (mm)
+  Mass: string;     // Mass (kg/m)
+  A: string;        // Area (mm²)
+  Ix: string;       // Moment of inertia about x-axis (×10⁶ mm⁴)
+  Sx: string;       // Elastic section modulus about x-axis (×10³ mm³)
+  Rx: string;       // Radius of gyration about x-axis (mm)
+  Y: string;        // Centroid Y location from back of vertical leg (mm)
+  Iy: string;       // Moment of inertia about y-axis (×10⁶ mm⁴)
+  Sy: string;       // Elastic section modulus about y-axis (×10³ mm³)
+  Ry: string;       // Radius of gyration about y-axis (mm)
+  X: string;        // Centroid X location from back of horizontal leg (mm)
+  Ixy: string;      // Product of inertia (×10⁶ mm⁴)
+  TanA: string;     // Tangent of principal axis angle
+  Rxp: string;      // Principal radius of gyration x (mm)
+  Ryp: string;      // Principal radius of gyration y (mm)
+  Rop: string;      // Polar radius of gyration (mm)
+  J: string;        // Torsional constant (×10³ mm⁴)
+  Cw: string;       // Warping constant (×10⁹ mm⁶)
+  Xop: string;      // Shear center X location (mm)
+  Yop: string;      // Shear center Y location (mm)
+  Omeg: string;     // Omega factor
+  SA: string;       // Surface area per meter (m²/m)
+  Ds_i: string;     // Imperial designation
+  Wt_i: string;     // Imperial weight (lb/ft)
+}
+
 // Generic section interface for all section types
 export interface GenericSection {
   // Common properties (all sections)
@@ -293,6 +331,20 @@ export interface SDesignResult {
   deflectionUtilization?: number;  // Ix_required/Ix ratio (for UDL/NBC modes)
 }
 
+export interface AngleDesignResult {
+  section: LSection;
+  Mrx: number;      // Factored moment resistance about x-axis (kN·m)
+  Mry: number;      // Factored moment resistance about y-axis (kN·m)
+  Vrx: number;      // Factored shear resistance about x-axis (kN)
+  Vry: number;      // Factored shear resistance about y-axis (kN)
+  momentUtilizationX: number;  // Mf/Mrx ratio
+  momentUtilizationY: number;  // Mf/Mry ratio
+  shearUtilizationX: number;   // Vf/Vrx ratio
+  shearUtilizationY: number;   // Vf/Vry ratio
+  isAdequate: boolean;
+  deflectionUtilization?: number;  // Ix_required/Ix ratio (for UDL/NBC modes)
+}
+
 export interface SectionClassification {
   flangeClass: number;
   webClass: number;
@@ -343,6 +395,50 @@ export interface ColumnDesignResult {
   axialUtilization: number;  // Cf/Cr ratio
   isAdequate: boolean;
   bucklingResult: ColumnBucklingResult;
+}
+
+// Baseplate design types
+export type BaseplateColumnType = 'W' | 'HSS';
+
+export interface BaseplateDesignInputs {
+  columnType: BaseplateColumnType;
+  d_col: number;       // mm - column depth
+  b_f: number;         // mm - column flange width (or HSS width)
+  t_f: number;         // mm - flange thickness (or HSS design wall thickness)
+  t_w: number;         // mm - web thickness (or HSS design wall thickness)
+  A_col: number;       // mm² - column area
+  Cf: number;          // kN - factored axial compression
+  Mx: number;          // kN·m - factored moment about x-axis
+  My: number;          // kN·m - factored moment about y-axis
+  Fy_bp: number;       // MPa - baseplate yield strength
+  fc: number;          // MPa - concrete compressive strength
+  B_plate?: number;    // mm - user-specified baseplate width (overrides auto-size)
+  N_plate?: number;    // mm - user-specified baseplate depth (overrides auto-size)
+  B_conc: number;      // mm - concrete pedestal width
+  N_conc: number;      // mm - concrete pedestal depth
+  grout: number;       // mm - grout thickness
+  overhang: number;    // mm - minimum plate overhang
+}
+
+export interface BaseplateDesignResult {
+  B: number;           // mm - baseplate width (parallel to column flange)
+  N: number;           // mm - baseplate depth (parallel to column depth)
+  t_bp: number;        // mm - baseplate thickness
+  A1: number;          // mm² - baseplate area
+  A2: number;          // mm² - concrete support area
+  sqrtA2A1: number;    // sqrt(A2/A1) factor
+  phi_pp: number;      // MPa - factored bearing resistance per unit area
+  pp_max: number;      // MPa - maximum bearing pressure
+  m: number;           // mm - cantilever distance (N direction)
+  n: number;           // mm - cantilever distance (B direction)
+  lambda_cant: number; // mm - governing cantilever distance
+  eccentricity: number;// mm - load eccentricity
+  Mf_per_mm: number;   // N·mm/mm - bending moment per unit width
+  t_bp_req: number;    // mm - required thickness before rounding
+  bearingUtilization: number;
+  status: 'converged' | 'not_converged' | 'eccentric_tension';
+  iterations: number;
+  isAdequate: boolean;
 }
 
 // Beam design modes

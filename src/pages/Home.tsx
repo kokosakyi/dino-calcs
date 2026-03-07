@@ -30,12 +30,12 @@ export function Home() {
           <span className="feature-tag">CSA S16-19</span>
         </Link>
 
-        <div className="feature-card disabled">
-          <div className="feature-icon">⊞</div>
-          <h2>Connection Design</h2>
-          <p>Bolted and welded connection design calculations</p>
-          <span className="feature-tag coming-soon">Coming Soon</span>
-        </div>
+        <Link to="/steel/baseplate-design" className="feature-card">
+          <div className="feature-icon">▭</div>
+          <h2>Baseplate Design</h2>
+          <p>Size steel baseplates for W-section and HSS columns with concrete bearing checks</p>
+          <span className="feature-tag">CSA S16-19</span>
+        </Link>
 
         <div className="feature-card disabled">
           <div className="feature-icon">▭</div>
