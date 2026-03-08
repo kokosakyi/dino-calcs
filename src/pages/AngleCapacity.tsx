@@ -2,10 +2,12 @@ import { useState, useMemo } from 'react';
 import { MathJax } from 'better-react-mathjax';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { AngleCapacitySummary } from '../components/AngleCapacitySummary';
+import { InputField } from '../components/InputField';
 import { 
   calculateAngleMomentResistance, 
   calculateAngleShearResistance, 
-  calculateAngleTensileResistance
+  calculateAngleTensileResistance,
+  calculateAngleCompressiveResistance
 } from '../utils/steelDesign';
 import type { LSection, SteelGrade } from '../types/steel';
 import { STEEL_PROPERTIES } from '../types/steel';
@@ -18,6 +20,7 @@ interface AngleCapacityResult {
   Vrx: number;
   Vry: number;
   Tr: number;
+  Cr: number;
 }
 
 export function AngleCapacity() {
@@ -26,6 +29,9 @@ export function AngleCapacity() {
   
   // Material inputs
   const [steelGrade, setSteelGrade] = useState<SteelGrade>('350W');
+
+  // Compression inputs
+  const [effectiveLength, setEffectiveLength] = useState<number>(3000);
 
   // Get unique section designations for dropdown
   const sectionOptions = useMemo(() => {
@@ -52,6 +58,7 @@ export function AngleCapacity() {
     const Vrx = calculateAngleShearResistance(selectedSection, Fy, 'x');
     const Vry = calculateAngleShearResistance(selectedSection, Fy, 'y');
     const Tr = calculateAngleTensileResistance(selectedSection, Fy);
+    const Cr = calculateAngleCompressiveResistance(selectedSection, Fy, effectiveLength);
 
     return {
       section: selectedSection,
@@ -60,8 +67,9 @@ export function AngleCapacity() {
       Vrx,
       Vry,
       Tr,
+      Cr,
     };
-  }, [selectedSection, steelGrade]);
+  }, [selectedSection, steelGrade, effectiveLength]);
 
   return (
     <div className="section-capacity-page">
@@ -126,10 +134,22 @@ export function AngleCapacity() {
               onChange={(v) => setSteelGrade(v as SteelGrade)}
             />
           </div>
+
+          <div className="input-group">
+            <h3>Compression Parameters</h3>
+            <InputField
+              label="Effective Length (KL)"
+              value={effectiveLength}
+              onChange={setEffectiveLength}
+              unit="mm"
+              min={0}
+              step={100}
+            />
+          </div>
         </div>
 
         <div className="design-criteria full-width">
-          <h3>Resistance Formulas (Placeholder)</h3>
+          <h3>Resistance Formulas</h3>
           <div className="criteria-grid">
             <div className="criteria-item">
               <span className="criteria-label">Moment Resistance:</span>
@@ -141,11 +161,15 @@ export function AngleCapacity() {
             </div>
             <div className="criteria-item">
               <span className="criteria-label">Tensile Resistance:</span>
-              <MathJax inline>{"\\(T_r = \\phi A F_y\\)"}</MathJax>
+              <MathJax inline>{"\\(T_r = \\phi F_y A_g\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <span className="criteria-label">Compressive Resistance:</span>
+              <MathJax inline>{"\\(C_r = \\phi A F_y \\left(1 + \\lambda^{2n}\\right)^{-1/n}\\)"}</MathJax>
             </div>
           </div>
           <p className="criteria-note">
-            φ = 0.9 (resistance factor) | ⚠️ Simplified placeholder formulas - accurate formulas required for final design
+            φ = 0.9 (resistance factor) | Cr per CSA S16-19 Cl. 13.3.1–13.3.3 | Moment/shear use simplified placeholder formulas
           </p>
         </div>
       </section>
@@ -156,6 +180,7 @@ export function AngleCapacity() {
           <AngleCapacitySummary
             result={capacityResult}
             steelGrade={steelGrade}
+            effectiveLength={effectiveLength}
           />
         </section>
       )}
@@ -174,7 +199,7 @@ export function AngleCapacity() {
             <strong>Centroid Location:</strong> The centroid of an angle is not at the geometric center. Check section properties for centroid locations (X, Y).
           </div>
           <div className="note-item">
-            <strong>Compression Resistance:</strong> Not calculated (requires buckling analysis based on effective length and support conditions).
+            <strong>Compression Resistance:</strong> Calculated per CSA S16-19 Clauses 13.3.1–13.3.3 with modified slenderness for single angles (Clause 13.3.3.2). Uses n = 1.34 column curve for hot-rolled sections.
           </div>
           <div className="note-item">
             <strong>Combined Loading:</strong> Not checked (requires interaction formulas for combined moment, shear, and axial forces).

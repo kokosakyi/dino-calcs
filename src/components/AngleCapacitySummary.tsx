@@ -12,17 +12,36 @@ interface AngleCapacitySummaryProps {
     Vrx: number;
     Vry: number;
     Tr: number;
+    Cr: number;
   };
   steelGrade: SteelGrade;
+  effectiveLength: number;
 }
 
-export function AngleCapacitySummary({ result, steelGrade }: AngleCapacitySummaryProps) {
-  const { section, Mrx, Mry, Vrx, Vry, Tr } = result;
+export function AngleCapacitySummary({ result, steelGrade, effectiveLength }: AngleCapacitySummaryProps) {
+  const { section, Mrx, Mry, Vrx, Vry, Tr, Cr } = result;
   const { Fy } = STEEL_PROPERTIES[steelGrade];
   
   const Sxx = parseFloat(section.Sx) * 1000;
   const Syy = parseFloat(section.Sy) * 1000;
   const A = parseFloat(section.A);
+
+  const E = 200_000;
+  const KL = effectiveLength;
+  const rx = parseFloat(section.Rx);
+  const ry = parseFloat(section.Ry);
+  const rv = parseFloat(section.Ryp);
+  const slend_x = KL / rx;
+  const slend_y = KL / ry;
+  const slend_z = KL / rv;
+  const governing = Math.max(slend_x, slend_y, slend_z);
+  let effective_KLr = governing <= 80 ? governing : 32 + 1.25 * slend_z;
+  effective_KLr = Math.min(effective_KLr, 200);
+  effective_KLr = Math.max(effective_KLr, 0.95 * (KL / rv));
+  const Fe = (Math.PI ** 2 * E) / (effective_KLr ** 2);
+  const lambda = Math.sqrt(Fy / Fe);
+  const n = 1.34;
+  const strength_factor = Math.pow(1 + Math.pow(lambda, 2 * n), -1 / n);
 
   const handlePrint = useCallback(() => {
     setTimeout(() => {
@@ -146,6 +165,10 @@ export function AngleCapacitySummary({ result, steelGrade }: AngleCapacitySummar
                       <td><MathJax dynamic inline>{"\\(r_y\\)"}</MathJax></td>
                       <td>{section.Ry} mm</td>
                     </tr>
+                    <tr>
+                      <td><MathJax dynamic inline>{"\\(r_v\\)"}</MathJax> (minor principal)</td>
+                      <td>{section.Ryp} mm</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -227,6 +250,72 @@ export function AngleCapacitySummary({ result, steelGrade }: AngleCapacitySummar
           </div>
 
           <div className="summary-section">
+            <h3>Compressive Resistance (CSA S16-19 Cl. 13.3)</h3>
+            <p className="support-type">Modified slenderness for single angles per Clause 13.3.3.2</p>
+            
+            <div className="equation-block">
+              <h4>Slenderness Ratios</h4>
+              <MathJax dynamic>
+                {`\\[KL = ${formatNumber(KL, 0)} \\text{ mm}\\]`}
+              </MathJax>
+              <MathJax dynamic>
+                {`\\[\\frac{KL}{r_x} = \\frac{${formatNumber(KL, 0)}}{${formatNumber(rx, 1)}} = ${formatNumber(slend_x, 1)}, \\quad \\frac{KL}{r_y} = \\frac{${formatNumber(KL, 0)}}{${formatNumber(ry, 1)}} = ${formatNumber(slend_y, 1)}, \\quad \\frac{KL}{r_v} = \\frac{${formatNumber(KL, 0)}}{${formatNumber(rv, 1)}} = ${formatNumber(slend_z, 1)}\\]`}
+              </MathJax>
+              <MathJax dynamic>
+                {`\\[\\text{Governing } KL/r = ${formatNumber(governing, 1)}${governing <= 80 ? ' \\leq 80' : ' > 80'}\\]`}
+              </MathJax>
+            </div>
+
+            <div className="equation-block">
+              <h4>Modified Slenderness (Cl. 13.3.3.2)</h4>
+              {governing <= 80 ? (
+                <MathJax dynamic>
+                  {`\\[\\left(\\frac{KL}{r}\\right)_{eff} = ${formatNumber(governing, 1)} \\quad (\\text{since } KL/r \\leq 80)\\]`}
+                </MathJax>
+              ) : (
+                <MathJax dynamic>
+                  {`\\[\\left(\\frac{KL}{r}\\right)_{eff} = 32 + 1.25 \\times ${formatNumber(slend_z, 1)} = ${formatNumber(32 + 1.25 * slend_z, 1)}\\]`}
+                </MathJax>
+              )}
+              <MathJax dynamic>
+                {`\\[\\text{with } 0.95 \\times \\frac{KL}{r_v} = ${formatNumber(0.95 * KL / rv, 1)} \\text{ check and } \\leq 200 \\text{ limit:}\\]`}
+              </MathJax>
+              <MathJax dynamic>
+                {`\\[\\left(\\frac{KL}{r}\\right)_{eff} = ${formatNumber(effective_KLr, 1)}\\]`}
+              </MathJax>
+            </div>
+
+            <div className="equation-block">
+              <h4>Elastic Buckling Stress & Column Curve</h4>
+              <MathJax dynamic>
+                {`\\[F_e = \\frac{\\pi^2 E}{(KL/r)_{eff}^2} = \\frac{\\pi^2 \\times 200{,}000}{${formatNumber(effective_KLr, 1)}^2} = ${formatNumber(Fe, 1)} \\text{ MPa}\\]`}
+              </MathJax>
+              <MathJax dynamic>
+                {`\\[\\lambda = \\sqrt{\\frac{F_y}{F_e}} = \\sqrt{\\frac{${Fy}}{${formatNumber(Fe, 1)}}} = ${formatNumber(lambda, 3)}\\]`}
+              </MathJax>
+              <MathJax dynamic>
+                {`\\[n = 1.34 \\quad (\\text{hot-rolled})\\]`}
+              </MathJax>
+              <MathJax dynamic>
+                {`\\[\\text{Strength factor} = \\left(1 + \\lambda^{2n}\\right)^{-1/n} = ${formatNumber(strength_factor, 4)}\\]`}
+              </MathJax>
+            </div>
+
+            <div className="equation-block">
+              <h4>Factored Compressive Resistance</h4>
+              <MathJax dynamic>
+                {`\\[C_r = \\phi A F_y \\left(1 + \\lambda^{2n}\\right)^{-1/n}\\]`}
+              </MathJax>
+              <MathJax dynamic>
+                {`\\[C_r = 0.9 \\times ${formatNumber(A, 0)} \\times ${Fy} \\times ${formatNumber(strength_factor, 4)} / 1000\\]`}
+              </MathJax>
+              <MathJax dynamic>
+                {`\\[C_r = ${formatNumber(Cr)} \\text{ kN}\\]`}
+              </MathJax>
+            </div>
+          </div>
+
+          <div className="summary-section">
             <h3>Resistance Summary</h3>
             <table className="properties-table properties-table-print">
               <tbody>
@@ -249,6 +338,10 @@ export function AngleCapacitySummary({ result, steelGrade }: AngleCapacitySummar
                 <tr>
                   <td>Tensile Resistance</td>
                   <td><strong>{formatNumber(Tr)} kN</strong></td>
+                </tr>
+                <tr>
+                  <td>Compressive Resistance (KL = {formatNumber(KL, 0)} mm)</td>
+                  <td><strong>{formatNumber(Cr)} kN</strong></td>
                 </tr>
               </tbody>
             </table>
@@ -294,7 +387,7 @@ export function AngleCapacitySummary({ result, steelGrade }: AngleCapacitySummar
 
           <div className="print-footer">
             <span>DinoCalcs - Angle Section Capacity Tool</span>
-            <span>⚠️ Simplified Placeholder Formulas - For Preliminary Design Only</span>
+            <span>Cr per CSA S16-19 Cl. 13.3 | Moment/shear use simplified formulas</span>
           </div>
         </div>
       </div>

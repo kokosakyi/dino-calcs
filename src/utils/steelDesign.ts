@@ -1161,7 +1161,7 @@ export function calculateAngleShearResistance(
 /**
  * Calculate tensile resistance for an angle section
  * Per CSA S16-19 Clause 13.2:
- * Tr = φ × Ag × Fy
+ * Tr = φ × Fy × Ag
  * 
  * Note: This assumes gross area. For angles with holes, use net area.
  * 
@@ -1173,12 +1173,61 @@ export function calculateAngleTensileResistance(
   section: LSection,
   Fy: number
 ): number {
-  const Ag = parseFloat(section.A); // mm²
-  
-  // Tr in N, convert to kN
-  const Tr = (PHI * Ag * Fy) / 1000;
-  
+  const Ag = parseFloat(section.A);
+  const Tr = (PHI * Fy * Ag) / 1000;
   return Tr;
+}
+
+/**
+ * Calculate factored compressive resistance for a single angle section
+ * Per CSA S16-19 Clauses 13.3.1, 13.3.2, 13.3.3
+ *
+ * Uses modified slenderness for single angles (Clause 13.3.3.2),
+ * elastic buckling stress Fe, and the n = 1.34 column curve for hot-rolled sections.
+ *
+ * @param section - The angle section
+ * @param Fy - Yield strength (MPa)
+ * @param KL - Effective length (mm)
+ * @returns Factored compressive resistance in kN
+ */
+export function calculateAngleCompressiveResistance(
+  section: LSection,
+  Fy: number,
+  KL: number
+): number {
+  const E = 200_000;
+  const A = parseFloat(section.A);
+  const rx = parseFloat(section.Rx);
+  const ry = parseFloat(section.Ry);
+  const rv = parseFloat(section.Ryp);
+
+  const slend_x = KL / rx;
+  const slend_y = KL / ry;
+  const slend_z = KL / rv;
+  const governing = Math.max(slend_x, slend_y, slend_z);
+
+  // Clause 13.3.3.2 — modified slenderness for single angles
+  let effective_KLr = governing <= 80
+    ? governing
+    : 32 + 1.25 * slend_z;
+
+  // Clause 10.4.2.2 — maximum permitted slenderness
+  effective_KLr = Math.min(effective_KLr, 200);
+
+  // Compare with 0.95 × (KL / rv)
+  effective_KLr = Math.max(effective_KLr, 0.95 * (KL / rv));
+
+  const Fe = (Math.PI ** 2 * E) / (effective_KLr ** 2);
+
+  const lambda = Math.sqrt(Fy / Fe);
+
+  // n = 1.34 for hot-rolled sections
+  const n = 1.34;
+  const strength_factor = Math.pow(1 + Math.pow(lambda, 2 * n), -1 / n);
+
+  const Cr = (PHI * A * Fy * strength_factor) / 1000;
+
+  return Cr;
 }
 
 /**
