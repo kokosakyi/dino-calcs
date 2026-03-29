@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { MathJax } from 'better-react-mathjax';
 import { CustomDropdown } from '../../components/CustomDropdown';
 import { InputField } from '../../components/InputField';
+import { ModuleOutcomeCards } from '../../components/ModuleOutcomeCards';
 import { ModulePrintSummary, ModuleUtilizationTable } from '../../components/ModulePrintSummary';
 import { WoodCalculationSection, WoodCalcStep } from '../../components/WoodCalculationSection';
 import {
@@ -148,6 +149,38 @@ export function WoodBiaxialBending() {
     { label: 'Shear fracture', ratio: result.utilization.shearFracture },
   ];
 
+  const calculatedDesignSummary = (
+    <>
+      <h3>Calculated Design Values</h3>
+      <div className="calculated-values-grid">
+        <div className="calculated-value">
+          <span className="label">M<sub>fx</sub> (strong axis):</span>
+          <span className="value">{result.Mfx_kNm.toFixed(3)} kN·m</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">M<sub>fy</sub> (weak axis):</span>
+          <span className="value">{result.Mfy_kNm.toFixed(3)} kN·m</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Moment resistance (M<sub>r</sub>):</span>
+          <span className="value">{result.Mr_kNm.toFixed(3)} kN·m</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Factored shear (V<sub>f</sub>):</span>
+          <span className="value">{result.Vf_kN.toFixed(2)} kN</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Service deflection (δ):</span>
+          <span className="value">{result.delta_mm.toFixed(2)} mm</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Deflection limit:</span>
+          <span className="value">{result.deltaLimit_mm.toFixed(2)} mm</span>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="beam-design-page wood-design-page">
       <header className="page-header">
@@ -248,6 +281,30 @@ export function WoodBiaxialBending() {
             />
           </div>
         </div>
+
+        <div className="calculated-loads-summary full-width">{calculatedDesignSummary}</div>
+
+        <div className="design-criteria full-width">
+          <h3>Design Criteria</h3>
+          <div className="criteria-grid">
+            <div className="criteria-item">
+              <MathJax inline>{"\\(M_{fx} \\le M_r,\\; M_{fy} \\le M_r\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(V_f \\le V_r\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(\\delta \\le \\delta_{\\lim}\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(Q_f \\le Q_r\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(Q_f \\le F_r\\)"}</MathJax>
+            </div>
+          </div>
+          <p className="criteria-note">Components from roof load normal to slope; same M<sub>r</sub> model for both axes in this tool</p>
+        </div>
       </section>
 
       <section className="calculations-panel">
@@ -335,29 +392,17 @@ export function WoodBiaxialBending() {
             </div>
           </div>
 
-          <div className="summary-section">
-            <h3>Key results</h3>
-            <div className="section-quick-info">
-              <div className="quick-info-item">
-                <span className="label">Mfx (strong axis component)</span>
-                <span className="value">{result.Mfx_kNm.toFixed(3)} kN·m</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">Mfy (weak axis component)</span>
-                <span className="value">{result.Mfy_kNm.toFixed(3)} kN·m</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">Mr (same for both checks)</span>
-                <span className="value">{result.Mr_kNm.toFixed(3)} kN·m</span>
-              </div>
-            </div>
-          </div>
+          <div className="calculated-loads-summary full-width pdf-only-calculated-summary">{calculatedDesignSummary}</div>
 
-          <ModuleUtilizationTable rows={utilizationRows} />
+          <div className="pdf-utilization-table">
+            <ModuleUtilizationTable rows={utilizationRows} />
+          </div>
 
           <WoodCalculationSection title="Calculation steps">{calculationSteps}</WoodCalculationSection>
         </ModulePrintSummary>
       </section>
+
+      <ModuleOutcomeCards rows={utilizationRows} />
     </div>
   );
 }

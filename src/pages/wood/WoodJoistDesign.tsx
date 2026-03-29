@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { MathJax } from 'better-react-mathjax';
 import { CustomDropdown } from '../../components/CustomDropdown';
 import { InputField } from '../../components/InputField';
+import { ModuleOutcomeCards } from '../../components/ModuleOutcomeCards';
 import { ModulePrintSummary, ModuleUtilizationTable } from '../../components/ModulePrintSummary';
 import { WoodCalculationSection, WoodCalcStep } from '../../components/WoodCalculationSection';
 import {
@@ -153,6 +154,38 @@ export function WoodJoistDesign() {
     { label: 'Bearing (Qf / Qr)', ratio: result.utilization.bearing },
   ];
 
+  const calculatedDesignSummary = (
+    <>
+      <h3>Calculated Design Values</h3>
+      <div className="calculated-values-grid">
+        <div className="calculated-value">
+          <span className="label">Factored moment (Mf):</span>
+          <span className="value">{result.Mf_kNm.toFixed(3)} kN·m</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Moment resistance (Mr):</span>
+          <span className="value">{result.Mr_kNm.toFixed(3)} kN·m</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Factored shear (Vf):</span>
+          <span className="value">{result.Vf_kN.toFixed(2)} kN</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Shear resistance (Vr):</span>
+          <span className="value">{result.Vr_kN.toFixed(2)} kN</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Service deflection (δ):</span>
+          <span className="value">{result.delta_mm.toFixed(2)} mm</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Deflection limit:</span>
+          <span className="value">{result.deltaLimit_mm.toFixed(2)} mm</span>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="beam-design-page wood-design-page">
       <header className="page-header">
@@ -256,6 +289,27 @@ export function WoodJoistDesign() {
             />
           </div>
         </div>
+
+        <div className="calculated-loads-summary full-width">{calculatedDesignSummary}</div>
+
+        <div className="design-criteria full-width">
+          <h3>Design Criteria</h3>
+          <div className="criteria-grid">
+            <div className="criteria-item">
+              <MathJax inline>{"\\(M_f \\le M_r\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(V_f \\le V_r\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(\\delta \\le \\delta_{\\lim}\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(Q_f \\le Q_r\\)"}</MathJax>
+            </div>
+          </div>
+          <p className="criteria-note">Modification factors and φ per CSA O86 (sawn lumber)</p>
+        </div>
       </section>
 
       <section className="calculations-panel">
@@ -339,41 +393,17 @@ export function WoodJoistDesign() {
             </div>
           </div>
 
-          <div className="summary-section">
-            <h3>Key results</h3>
-            <div className="section-quick-info">
-              <div className="quick-info-item">
-                <span className="label">Mf</span>
-                <span className="value">{result.Mf_kNm.toFixed(3)} kN·m</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">Mr</span>
-                <span className="value">{result.Mr_kNm.toFixed(3)} kN·m</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">Vf</span>
-                <span className="value">{result.Vf_kN.toFixed(2)} kN</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">Vr</span>
-                <span className="value">{result.Vr_kN.toFixed(2)} kN</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">δ</span>
-                <span className="value">{result.delta_mm.toFixed(2)} mm</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">δ limit</span>
-                <span className="value">{result.deltaLimit_mm.toFixed(2)} mm</span>
-              </div>
-            </div>
-          </div>
+          <div className="calculated-loads-summary full-width pdf-only-calculated-summary">{calculatedDesignSummary}</div>
 
-          <ModuleUtilizationTable rows={utilizationRows} />
+          <div className="pdf-utilization-table">
+            <ModuleUtilizationTable rows={utilizationRows} />
+          </div>
 
           <WoodCalculationSection title="Calculation steps">{calculationSteps}</WoodCalculationSection>
         </ModulePrintSummary>
       </section>
+
+      <ModuleOutcomeCards rows={utilizationRows} />
     </div>
   );
 }

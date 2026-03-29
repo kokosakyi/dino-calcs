@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { MathJax } from 'better-react-mathjax';
 import { CustomDropdown } from '../../components/CustomDropdown';
 import { InputField } from '../../components/InputField';
+import { ModuleOutcomeCards } from '../../components/ModuleOutcomeCards';
 import { ModulePrintSummary, ModuleUtilizationTable } from '../../components/ModulePrintSummary';
 import { WoodCalculationSection, WoodCalcStep } from '../../components/WoodCalculationSection';
 import {
@@ -77,6 +78,42 @@ export function ConcreteBeamDesign() {
     { label: 'Min. depth', ratio: mt.hMin_mm / h, description: `h_min = ${mt.hMin_mm.toFixed(0)} mm` },
     { label: 'Crack control', ratio: cc.z_Nmm / cc.zLimit_Nmm, description: `z = ${cc.z_Nmm.toFixed(0)} N/mm` },
   ];
+
+  const calculatedDesignSummary = (
+    <>
+      <h3>Calculated Design Values</h3>
+      <div className="calculated-values-grid">
+        <div className="calculated-value">
+          <span className="label">Effective depth (d):</span>
+          <span className="value">{f.d_mm.toFixed(1)} mm</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">A<sub>s,req</sub>:</span>
+          <span className="value">{Number.isFinite(f.As_required_mm2) ? `${f.As_required_mm2.toFixed(0)} mm²` : '—'}</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">A<sub>s,prov</sub>:</span>
+          <span className="value">
+            {f.numBars}-{mainBarSize} = {f.As_provided_mm2} mm²
+          </span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Moment resistance (M<sub>r</sub>):</span>
+          <span className="value">{f.Mr_kNm.toFixed(1)} kN·m</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Shear resistance (V<sub>r</sub>):</span>
+          <span className="value">{s.Vr_kN.toFixed(1)} kN</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Stirrups:</span>
+          <span className="value">
+            {stirrupSize} @ {s.stirrupSpacing_mm} mm
+          </span>
+        </div>
+      </div>
+    </>
+  );
 
   const calculationSteps = (
     <>
@@ -236,6 +273,30 @@ export function ConcreteBeamDesign() {
             </div>
           </div>
         </div>
+
+        <div className="calculated-loads-summary full-width">{calculatedDesignSummary}</div>
+
+        <div className="design-criteria full-width">
+          <h3>Design Criteria</h3>
+          <div className="criteria-grid">
+            <div className="criteria-item">
+              <MathJax inline>{"\\(M_f \\le M_r\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(V_f \\le V_r\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(c/d \\le 700/(700+f_y)\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(h \\ge h_{\\min}\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(z \\le z_{\\lim}\\)"}</MathJax>
+            </div>
+          </div>
+          <p className="criteria-note">φ factors and stress block per CSA A23.3 Cl. 10</p>
+        </div>
       </section>
 
       <section className="calculations-panel">
@@ -327,45 +388,17 @@ export function ConcreteBeamDesign() {
             </div>
           </div>
 
-          <div className="summary-section">
-            <h3>Key results</h3>
-            <div className="section-quick-info">
-              <div className="quick-info-item">
-                <span className="label">d</span>
-                <span className="value">{f.d_mm.toFixed(1)} mm</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">As,req</span>
-                <span className="value">{Number.isFinite(f.As_required_mm2) ? f.As_required_mm2.toFixed(0) : '—'} mm²</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">As,prov</span>
-                <span className="value">
-                  {f.numBars}-{mainBarSize} = {f.As_provided_mm2} mm²
-                </span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">Mr</span>
-                <span className="value">{f.Mr_kNm.toFixed(1)} kN·m</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">Stirrups</span>
-                <span className="value">
-                  {stirrupSize} @ {s.stirrupSpacing_mm} mm
-                </span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">Vr</span>
-                <span className="value">{s.Vr_kN.toFixed(1)} kN</span>
-              </div>
-            </div>
-          </div>
+          <div className="calculated-loads-summary full-width pdf-only-calculated-summary">{calculatedDesignSummary}</div>
 
-          <ModuleUtilizationTable rows={utilizationRows} />
+          <div className="pdf-utilization-table">
+            <ModuleUtilizationTable rows={utilizationRows} />
+          </div>
 
           <WoodCalculationSection title="Calculation steps">{calculationSteps}</WoodCalculationSection>
         </ModulePrintSummary>
       </section>
+
+      <ModuleOutcomeCards rows={utilizationRows} />
     </div>
   );
 }

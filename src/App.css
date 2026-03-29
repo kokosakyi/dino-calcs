@@ -2963,6 +2963,51 @@ mjx-container[jax="CHTML"]:not([display="true"]) {
   color: var(--primary) !important;
 }
 
+/* Wood / concrete modules — utilization cards (steel results-panel pattern) */
+.module-outcome-desc {
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.module-outcome-status {
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-top: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.module-outcome-status.pass {
+  color: var(--success);
+}
+
+.module-outcome-status.fail {
+  color: var(--danger);
+}
+
+.capacity-card.module-outcome-ng {
+  border-left-color: var(--danger) !important;
+}
+
+/* Shown only in PDF inside .print-container (screen uses ModuleOutcomeCards) */
+.pdf-only-calculated-summary,
+.pdf-utilization-table {
+  display: none !important;
+}
+
+@media print {
+  .print-container .pdf-only-calculated-summary,
+  .print-container .pdf-utilization-table {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .print-container .pdf-utilization-table table {
+    display: table;
+    width: 100%;
+  }
+}
+
 /* Responsive adjustments for capacity page */
 @media (max-width: 768px) {
   .capacity-cards-grid {
@@ -2970,6 +3015,10 @@ mjx-container[jax="CHTML"]:not([display="true"]) {
   }
   
   .section-quick-info {
+    grid-template-columns: 1fr;
+  }
+
+  .calculated-values-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -11,7 +11,7 @@ function formatUtilPct(r: number): string {
   return `${(r * 100).toFixed(1)}%`;
 }
 
-/** Utilization summary in steel-style table form (screen + print). */
+/** Utilization table for PDF export; on wood/concrete pages wrap in `.pdf-utilization-table` (hidden on screen). */
 export function ModuleUtilizationTable({ rows }: { rows: ModuleUtilizationRow[] }) {
   return (
     <div className="summary-section properties-table properties-table-print module-utilization-table">

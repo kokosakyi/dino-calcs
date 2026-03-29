@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { MathJax } from 'better-react-mathjax';
 import { CustomDropdown } from '../../components/CustomDropdown';
 import { InputField } from '../../components/InputField';
+import { ModuleOutcomeCards } from '../../components/ModuleOutcomeCards';
 import { ModulePrintSummary, ModuleUtilizationTable } from '../../components/ModulePrintSummary';
 import { WoodCalculationSection, WoodCalcStep } from '../../components/WoodCalculationSection';
 import {
@@ -158,6 +159,38 @@ export function WoodSawnTimberBeam() {
     { label: 'Shear fracture', ratio: result.utilization.shearFracture },
   ];
 
+  const calculatedDesignSummary = (
+    <>
+      <h3>Calculated Design Values</h3>
+      <div className="calculated-values-grid">
+        <div className="calculated-value">
+          <span className="label">Factored moment (Mf):</span>
+          <span className="value">{result.Mf_kNm.toFixed(3)} kN·m</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Moment resistance (Mr):</span>
+          <span className="value">{result.Mr_kNm.toFixed(3)} kN·m</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Stability factor (K<sub>L</sub>):</span>
+          <span className="value">{result.factors.KL.toFixed(3)}</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Factored shear (Vf):</span>
+          <span className="value">{result.Vf_kN.toFixed(2)} kN</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Shear resistance (Vr):</span>
+          <span className="value">{result.Vr_kN.toFixed(2)} kN</span>
+        </div>
+        <div className="calculated-value">
+          <span className="label">Service deflection (δ):</span>
+          <span className="value">{result.delta_mm.toFixed(2)} mm</span>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="beam-design-page wood-design-page">
       <header className="page-header">
@@ -249,6 +282,30 @@ export function WoodSawnTimberBeam() {
             />
           </div>
         </div>
+
+        <div className="calculated-loads-summary full-width">{calculatedDesignSummary}</div>
+
+        <div className="design-criteria full-width">
+          <h3>Design Criteria</h3>
+          <div className="criteria-grid">
+            <div className="criteria-item">
+              <MathJax inline>{"\\(M_f \\le M_r\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(V_f \\le V_r\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(\\delta \\le \\delta_{\\lim}\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(Q_f \\le Q_r\\)"}</MathJax>
+            </div>
+            <div className="criteria-item">
+              <MathJax inline>{"\\(Q_f \\le F_r\\)"}</MathJax>
+            </div>
+          </div>
+          <p className="criteria-note">Sawn timber (Table 6.3.1C); K<sub>H</sub> = 1.0 in this tool</p>
+        </div>
       </section>
 
       <section className="calculations-panel">
@@ -332,29 +389,17 @@ export function WoodSawnTimberBeam() {
             </div>
           </div>
 
-          <div className="summary-section">
-            <h3>Key results</h3>
-            <div className="section-quick-info">
-              <div className="quick-info-item">
-                <span className="label">Mf</span>
-                <span className="value">{result.Mf_kNm.toFixed(3)} kN·m</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">Mr</span>
-                <span className="value">{result.Mr_kNm.toFixed(3)} kN·m</span>
-              </div>
-              <div className="quick-info-item">
-                <span className="label">K_L</span>
-                <span className="value">{result.factors.KL.toFixed(3)}</span>
-              </div>
-            </div>
-          </div>
+          <div className="calculated-loads-summary full-width pdf-only-calculated-summary">{calculatedDesignSummary}</div>
 
-          <ModuleUtilizationTable rows={utilizationRows} />
+          <div className="pdf-utilization-table">
+            <ModuleUtilizationTable rows={utilizationRows} />
+          </div>
 
           <WoodCalculationSection title="Calculation steps">{calculationSteps}</WoodCalculationSection>
         </ModulePrintSummary>
       </section>
+
+      <ModuleOutcomeCards rows={utilizationRows} />
     </div>
   );
 }
