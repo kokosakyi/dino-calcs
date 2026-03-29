@@ -2350,6 +2350,30 @@ mjx-container[jax="CHTML"]:not([display="true"]) {
   .hero h1 {
     font-size: 2rem;
   }
+
+  .beam-design-page .page-header h1 {
+    font-size: 1.35rem;
+  }
+
+  .beam-design-page .page-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .beam-design-page .input-panel {
+    padding: 1rem;
+  }
+
+  .beam-design-page .design-summary {
+    padding: 1rem;
+  }
+
+  .beam-design-page .wood-calculation-steps.input-panel {
+    padding: 1rem;
+  }
+
+  .beam-design-page .equation-block {
+    padding: 0.75rem 0.85rem;
+  }
 }
 
 /* ===== Design Mode Selector ===== */
@@ -3449,10 +3473,30 @@ mjx-container[jax="CHTML"]:not([display="true"]) {
   margin-bottom: 1rem;
 }
 
-/* Wood design — utilization summary */
-.wood-design-page {
-  max-width: 1400px;
-  margin: 0 auto;
+/* Wood design — page shell shares .beam-design-page; wood-specific widgets below */
+.module-utilization-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.module-utilization-table td {
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+
+.module-utilization-table td:nth-child(2) {
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .module-utilization-table table,
+  .module-utilization-table td {
+    font-size: 0.78rem;
+  }
 }
 
 .wood-util-grid {
@@ -3526,11 +3570,7 @@ mjx-container[jax="CHTML"]:not([display="true"]) {
   line-height: 1.45;
 }
 
-/* Concrete design page */
-.concrete-design-page {
-  max-width: 1400px;
-  margin: 0 auto;
-}
+/* Concrete design — shares .beam-design-page layout */
 
 /* Concrete utilization summary */
 .concrete-util-grid {

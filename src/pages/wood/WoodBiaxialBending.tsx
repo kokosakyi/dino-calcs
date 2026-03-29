@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { MathJax } from 'better-react-mathjax';
 import { CustomDropdown } from '../../components/CustomDropdown';
 import { InputField } from '../../components/InputField';
-import { WoodUtilizationSummary } from '../../components/WoodUtilizationSummary';
+import { ModulePrintSummary, ModuleUtilizationTable } from '../../components/ModulePrintSummary';
 import { WoodCalculationSection, WoodCalcStep } from '../../components/WoodCalculationSection';
 import {
   computeWoodBiaxial,
@@ -108,15 +108,55 @@ export function WoodBiaxialBending() {
     return { mat, b, d, dn, Le, CB, CK, Fb_adj, klCase, thetaRad, sinT, cosT, eMm, eta, alpha, KNfinite };
   }, [species, grade, sectionLabel, notchDepth, unsupportedLength, bearingLength, result, roofPitchDeg]);
 
+  const calculationSteps = (
+    <>
+      <WoodCalcStep label="1. Roof angle & resolved loads">
+        <MathJax dynamic>{`\\[ \\theta = ${roofPitchDeg.toFixed(2)}^\\circ \\times \\frac{\\pi}{180} = ${stepDetail.thetaRad.toFixed(4)}\\ \\text{rad},\\quad \\sin\\theta = ${stepDetail.sinT.toFixed(4)},\\quad \\cos\\theta = ${stepDetail.cosT.toFixed(4)} \\]`}</MathJax>
+        <MathJax>{`\\[ M_{fx} = \\dfrac{p_f \\sin\\theta\\, s L^2}{8}\\times 10^{-9},\\quad M_{fy} = \\dfrac{p_f \\cos\\theta\\, s L^2}{8}\\times 10^{-9} \\]`}</MathJax>
+        <MathJax dynamic>{`\\[ M_{fx} = ${result.Mfx_kNm.toFixed(3)}\\ \\text{kN}\\!\\cdot\\!\\text{m},\\quad M_{fy} = ${result.Mfy_kNm.toFixed(3)}\\ \\text{kN}\\!\\cdot\\!\\text{m} \\]`}</MathJax>
+        <p className="wood-calc-note">p<sub>f</sub> is pressure normal to the roof plane; components follow the legacy calculator.</p>
+      </WoodCalcStep>
+      <WoodCalcStep label="2. Section & material (Table 6.3.1C)">
+        <MathJax dynamic>{`\\[ b = ${stepDetail.b},\\; d = ${stepDetail.d},\\; S = ${result.geometry.S_mm3.toFixed(0)}\\ \\text{mm}^3,\\; I = ${result.geometry.I_mm4.toFixed(0)}\\ \\text{mm}^4 \\]`}</MathJax>
+        <MathJax dynamic>{`\\[ f_b = ${stepDetail.mat.fb.toFixed(2)}\\ \\text{MPa},\\; E = ${stepDetail.mat.E.toFixed(0)}\\ \\text{MPa} \\]`}</MathJax>
+      </WoodCalcStep>
+      <WoodCalcStep label="3. Factors & lateral stability">
+        <MathJax dynamic>{`\\[ K_H = 1.0,\\; L_e = ${stepDetail.Le.toFixed(1)}\\ \\text{mm},\\; C_B = ${stepDetail.CB.toFixed(3)},\\; C_K = ${stepDetail.CK.toFixed(3)} \\]`}</MathJax>
+        {stepDetail.klCase === 1 && <MathJax dynamic>{`\\[ K_L = 1 \\]`}</MathJax>}
+        {stepDetail.klCase === 2 && <MathJax dynamic>{`\\[ K_L = ${result.factors.KL.toFixed(4)} \\]`}</MathJax>}
+        {stepDetail.klCase === 3 && <MathJax dynamic>{`\\[ K_L = ${result.factors.KL.toFixed(4)},\\; F_b' = ${stepDetail.Fb_adj.toFixed(3)}\\ \\text{MPa} \\]`}</MathJax>}
+      </WoodCalcStep>
+      <WoodCalcStep label="4. Single M_r (same strong/weak check in this model)">
+        <MathJax dynamic>{`\\[ M_r = \\frac{\\phi_b f_b K_D K_H K_{Sb} K_T S K_{Zb} K_L}{10^6} = ${result.Mr_kNm.toFixed(3)}\\ \\text{kN}\\!\\cdot\\!\\text{m} \\]`}</MathJax>
+      </WoodCalcStep>
+      <WoodCalcStep label="5. Shear, bearing, fracture, deflection">
+        <MathJax dynamic>{`\\[ V_f = ${result.Vf_kN.toFixed(3)}\\ \\text{kN},\\; Q_f = ${result.Qf_kN.toFixed(3)}\\ \\text{kN},\\; V_r = ${result.Vr_kN.toFixed(3)}\\ \\text{kN},\\; Q_r = ${result.Qr_kN.toFixed(3)}\\ \\text{kN} \\]`}</MathJax>
+        <MathJax dynamic>{`\\[ F_r = ${result.Fr_kN.toFixed(3)}\\ \\text{kN},\\; \\delta = ${result.delta_mm.toFixed(3)}\\ \\text{mm},\\; \\delta_{\\lim} = ${result.deltaLimit_mm.toFixed(3)}\\ \\text{mm} \\]`}</MathJax>
+      </WoodCalcStep>
+      <WoodCalcStep label="6. Utilization">
+        <MathJax dynamic>{`\\[ \\frac{M_{fx}}{M_r}=${result.utilization.bendingStrong.toFixed(3)},\\; \\frac{M_{fy}}{M_r}=${result.utilization.bendingWeak.toFixed(3)},\\; \\frac{V_f}{V_r}=${result.utilization.shear.toFixed(3)},\\; \\frac{\\delta}{\\delta_{\\lim}}=${result.utilization.deflection.toFixed(3)} \\]`}</MathJax>
+      </WoodCalcStep>
+    </>
+  );
+
+  const utilizationRows = [
+    { label: 'Bending (Mfx / Mr)', ratio: result.utilization.bendingStrong },
+    { label: 'Bending (Mfy / Mr)', ratio: result.utilization.bendingWeak },
+    { label: 'Shear', ratio: result.utilization.shear },
+    { label: 'Deflection', ratio: result.utilization.deflection },
+    { label: 'Bearing', ratio: result.utilization.bearing },
+    { label: 'Shear fracture', ratio: result.utilization.shearFracture },
+  ];
+
   return (
-    <div className="wood-design-page">
+    <div className="beam-design-page wood-design-page">
       <header className="page-header">
-        <h1>Biaxial bending (sloped roof)</h1>
-        <p>Timber beam with load resolved using roof pitch θ in degrees (θ<sub>rad</sub> = θ° × π/180)</p>
+        <h1>Biaxial Bending (Sloped Roof)</h1>
+        <p>Timber beam with load resolved using roof pitch θ (θ<sub>rad</sub> = θ° × π/180) per CSA O86</p>
       </header>
 
       <section className="input-panel">
-        <h2>Inputs</h2>
+        <h2>Design Inputs</h2>
         <div className="input-groups-container">
           <div className="input-group">
             <h3>Loads & span</h3>
@@ -210,63 +250,114 @@ export function WoodBiaxialBending() {
         </div>
       </section>
 
-      <section className="capacity-results-panel" style={{ marginTop: '1.5rem' }}>
-        <h2>Key results</h2>
-        <div className="section-quick-info">
-          <div className="quick-info-item">
-            <span className="label">Mfx (strong axis component)</span>
-            <span className="value">{result.Mfx_kNm.toFixed(3)} kN·m</span>
+      <section className="calculations-panel">
+        <ModulePrintSummary
+          printTitle="Biaxial Bending (Sloped Roof) Calculation"
+          standardLine="CSA O86 — Engineering Design in Wood"
+          footerLeft="DinoCalcs — Wood design"
+          footerRight="Calculations per CSA O86"
+        >
+          <h2>Design Summary</h2>
+
+          <div className="summary-section design-inputs-section">
+            <h3>Design inputs</h3>
+            <div className="inputs-grid print-two-col">
+              <div className="input-group">
+                <h4>Loads &amp; geometry</h4>
+                <table className="inputs-table">
+                  <tbody>
+                    <tr>
+                      <td>Factored loading (normal to roof)</td>
+                      <td>{factoredLoading} kPa</td>
+                    </tr>
+                    <tr>
+                      <td>Service loading</td>
+                      <td>{serviceLoading} kPa</td>
+                    </tr>
+                    <tr>
+                      <td>Tributary width</td>
+                      <td>{tributaryWidth} mm</td>
+                    </tr>
+                    <tr>
+                      <td>Beam span</td>
+                      <td>{beamSpan} mm</td>
+                    </tr>
+                    <tr>
+                      <td>Bearing length</td>
+                      <td>{bearingLength} mm</td>
+                    </tr>
+                    <tr>
+                      <td>Unsupported length</td>
+                      <td>{unsupportedLength} mm</td>
+                    </tr>
+                    <tr>
+                      <td>Notch depth</td>
+                      <td>{notchDepth} mm</td>
+                    </tr>
+                    <tr>
+                      <td>Roof pitch</td>
+                      <td>{roofPitchDeg}°</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="input-group">
+                <h4>Section &amp; factors</h4>
+                <table className="inputs-table">
+                  <tbody>
+                    <tr>
+                      <td>Species</td>
+                      <td>{species}</td>
+                    </tr>
+                    <tr>
+                      <td>Grade</td>
+                      <td>{grade}</td>
+                    </tr>
+                    <tr>
+                      <td>Section (b × d)</td>
+                      <td>{sectionLabel}</td>
+                    </tr>
+                    <tr>
+                      <td>Load duration</td>
+                      <td>{loadDuration}</td>
+                    </tr>
+                    <tr>
+                      <td>Service condition</td>
+                      <td>{serviceCondition}</td>
+                    </tr>
+                    <tr>
+                      <td>Treatment</td>
+                      <td>{treatment}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-          <div className="quick-info-item">
-            <span className="label">Mfy (weak axis component)</span>
-            <span className="value">{result.Mfy_kNm.toFixed(3)} kN·m</span>
+
+          <div className="summary-section">
+            <h3>Key results</h3>
+            <div className="section-quick-info">
+              <div className="quick-info-item">
+                <span className="label">Mfx (strong axis component)</span>
+                <span className="value">{result.Mfx_kNm.toFixed(3)} kN·m</span>
+              </div>
+              <div className="quick-info-item">
+                <span className="label">Mfy (weak axis component)</span>
+                <span className="value">{result.Mfy_kNm.toFixed(3)} kN·m</span>
+              </div>
+              <div className="quick-info-item">
+                <span className="label">Mr (same for both checks)</span>
+                <span className="value">{result.Mr_kNm.toFixed(3)} kN·m</span>
+              </div>
+            </div>
           </div>
-          <div className="quick-info-item">
-            <span className="label">Mr (same for both checks)</span>
-            <span className="value">{result.Mr_kNm.toFixed(3)} kN·m</span>
-          </div>
-        </div>
+
+          <ModuleUtilizationTable rows={utilizationRows} />
+
+          <WoodCalculationSection title="Calculation steps">{calculationSteps}</WoodCalculationSection>
+        </ModulePrintSummary>
       </section>
-
-      <WoodUtilizationSummary
-        rows={[
-          { label: 'Bending (Mfx / Mr)', ratio: result.utilization.bendingStrong },
-          { label: 'Bending (Mfy / Mr)', ratio: result.utilization.bendingWeak },
-          { label: 'Shear', ratio: result.utilization.shear },
-          { label: 'Deflection', ratio: result.utilization.deflection },
-          { label: 'Bearing', ratio: result.utilization.bearing },
-          { label: 'Shear fracture', ratio: result.utilization.shearFracture },
-        ]}
-      />
-
-      <WoodCalculationSection>
-        <WoodCalcStep label="1. Roof angle & resolved loads">
-          <MathJax dynamic>{`\\[ \\theta = ${roofPitchDeg.toFixed(2)}^\\circ \\times \\frac{\\pi}{180} = ${stepDetail.thetaRad.toFixed(4)}\\ \\text{rad},\\quad \\sin\\theta = ${stepDetail.sinT.toFixed(4)},\\quad \\cos\\theta = ${stepDetail.cosT.toFixed(4)} \\]`}</MathJax>
-          <MathJax>{`\\[ M_{fx} = \\dfrac{p_f \\sin\\theta\\, s L^2}{8}\\times 10^{-9},\\quad M_{fy} = \\dfrac{p_f \\cos\\theta\\, s L^2}{8}\\times 10^{-9} \\]`}</MathJax>
-          <MathJax dynamic>{`\\[ M_{fx} = ${result.Mfx_kNm.toFixed(3)}\\ \\text{kN}\\!\\cdot\\!\\text{m},\\quad M_{fy} = ${result.Mfy_kNm.toFixed(3)}\\ \\text{kN}\\!\\cdot\\!\\text{m} \\]`}</MathJax>
-          <p className="wood-calc-note">p<sub>f</sub> is pressure normal to the roof plane; components follow the legacy calculator.</p>
-        </WoodCalcStep>
-        <WoodCalcStep label="2. Section & material (Table 6.3.1C)">
-          <MathJax dynamic>{`\\[ b = ${stepDetail.b},\\; d = ${stepDetail.d},\\; S = ${result.geometry.S_mm3.toFixed(0)}\\ \\text{mm}^3,\\; I = ${result.geometry.I_mm4.toFixed(0)}\\ \\text{mm}^4 \\]`}</MathJax>
-          <MathJax dynamic>{`\\[ f_b = ${stepDetail.mat.fb.toFixed(2)}\\ \\text{MPa},\\; E = ${stepDetail.mat.E.toFixed(0)}\\ \\text{MPa} \\]`}</MathJax>
-        </WoodCalcStep>
-        <WoodCalcStep label="3. Factors & lateral stability">
-          <MathJax dynamic>{`\\[ K_H = 1.0,\\; L_e = ${stepDetail.Le.toFixed(1)}\\ \\text{mm},\\; C_B = ${stepDetail.CB.toFixed(3)},\\; C_K = ${stepDetail.CK.toFixed(3)} \\]`}</MathJax>
-          {stepDetail.klCase === 1 && <MathJax dynamic>{`\\[ K_L = 1 \\]`}</MathJax>}
-          {stepDetail.klCase === 2 && <MathJax dynamic>{`\\[ K_L = ${result.factors.KL.toFixed(4)} \\]`}</MathJax>}
-          {stepDetail.klCase === 3 && <MathJax dynamic>{`\\[ K_L = ${result.factors.KL.toFixed(4)},\\; F_b' = ${stepDetail.Fb_adj.toFixed(3)}\\ \\text{MPa} \\]`}</MathJax>}
-        </WoodCalcStep>
-        <WoodCalcStep label="4. Single M_r (same strong/weak check in this model)">
-          <MathJax dynamic>{`\\[ M_r = \\frac{\\phi_b f_b K_D K_H K_{Sb} K_T S K_{Zb} K_L}{10^6} = ${result.Mr_kNm.toFixed(3)}\\ \\text{kN}\\!\\cdot\\!\\text{m} \\]`}</MathJax>
-        </WoodCalcStep>
-        <WoodCalcStep label="5. Shear, bearing, fracture, deflection">
-          <MathJax dynamic>{`\\[ V_f = ${result.Vf_kN.toFixed(3)}\\ \\text{kN},\\; Q_f = ${result.Qf_kN.toFixed(3)}\\ \\text{kN},\\; V_r = ${result.Vr_kN.toFixed(3)}\\ \\text{kN},\\; Q_r = ${result.Qr_kN.toFixed(3)}\\ \\text{kN} \\]`}</MathJax>
-          <MathJax dynamic>{`\\[ F_r = ${result.Fr_kN.toFixed(3)}\\ \\text{kN},\\; \\delta = ${result.delta_mm.toFixed(3)}\\ \\text{mm},\\; \\delta_{\\lim} = ${result.deltaLimit_mm.toFixed(3)}\\ \\text{mm} \\]`}</MathJax>
-        </WoodCalcStep>
-        <WoodCalcStep label="6. Utilization">
-          <MathJax dynamic>{`\\[ \\frac{M_{fx}}{M_r}=${result.utilization.bendingStrong.toFixed(3)},\\; \\frac{M_{fy}}{M_r}=${result.utilization.bendingWeak.toFixed(3)},\\; \\frac{V_f}{V_r}=${result.utilization.shear.toFixed(3)},\\; \\frac{\\delta}{\\delta_{\\lim}}=${result.utilization.deflection.toFixed(3)} \\]`}</MathJax>
-        </WoodCalcStep>
-      </WoodCalculationSection>
     </div>
   );
 }
