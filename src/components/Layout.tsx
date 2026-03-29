@@ -221,12 +221,15 @@ export function Layout() {
                     <li><span className="nav-icon">⊢</span>Rectangular Beam</li>
                   </NavLink>
                 </ul>
+              </div>
+              <div className="nav-section">
+                <h3>Slab Design</h3>
+                <ul>
+                  <NavLink to="/concrete/slab-design" className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobile}>
+                    <li><span className="nav-icon">▥</span>One-Way Slab</li>
+                  </NavLink>
+                </ul>
                 <ul className="disabled">
-                  <li className="coming-soon-item">
-                    <span className="nav-icon">▥</span>
-                    Slab Design
-                    <span className="coming-soon-badge">Soon</span>
-                  </li>
                   <li className="coming-soon-item">
                     <span className="nav-icon">⊡</span>
                     Column Design

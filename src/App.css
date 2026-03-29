@@ -3671,6 +3671,33 @@ mjx-container[jax="CHTML"]:not([display="true"]) {
   color: var(--concrete);
 }
 
+/* ===== Mobile MathJax overflow prevention ===== */
+@media (max-width: 768px) {
+  .wood-calc-step-content {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .wood-calc-step-content mjx-container[display="true"] {
+    font-size: 0.9rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .wood-calc-step-content mjx-container[display="true"] {
+    font-size: 0.82rem !important;
+  }
+
+  .calculated-value .value {
+    font-size: 0.82rem;
+    word-break: break-word;
+  }
+
+  .page-header h1 {
+    font-size: 1.25rem;
+  }
+}
+
 /* Checkbox field styling */
 .checkbox-field {
   display: flex;

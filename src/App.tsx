@@ -6,6 +6,7 @@ import { Home } from './pages/Home';
 import { SteelHome } from './pages/SteelHome';
 import { ConcreteHome } from './pages/ConcreteHome';
 import { ConcreteBeamDesign } from './pages/concrete/ConcreteBeamDesign';
+import { ConcreteSlabDesign } from './pages/concrete/ConcreteSlabDesign';
 import { WoodHome } from './pages/WoodHome';
 import { WoodJoistDesign } from './pages/wood/WoodJoistDesign';
 import { WoodBuiltUpBeam } from './pages/wood/WoodBuiltUpBeam';
@@ -65,6 +66,7 @@ function App() {
               <Route path="concrete">
                 <Route index element={<ConcreteHome />} />
                 <Route path="beam-design" element={<ConcreteBeamDesign />} />
+                <Route path="slab-design" element={<ConcreteSlabDesign />} />
               </Route>
 
               {/* Wood Design - CSA O86 */}

@@ -13,12 +13,19 @@ export function ConcreteHome() {
 
       <div className="discipline-tools-section">
         <h2>Available Tools</h2>
-        <div className="tool-cards">
+        <div className="tool-grid">
           <NavLink to="/concrete/beam-design" className="tool-card">
             <span className="tool-icon">⊢</span>
             <div>
               <h3>Rectangular Beam Design</h3>
               <p>Flexural and shear design with crack control checks</p>
+            </div>
+          </NavLink>
+          <NavLink to="/concrete/slab-design" className="tool-card">
+            <span className="tool-icon">▥</span>
+            <div>
+              <h3>One-Way Slab Design</h3>
+              <p>Flexural design per 1 m strip with shear and crack control</p>
             </div>
           </NavLink>
         </div>
@@ -34,13 +41,6 @@ export function ConcreteHome() {
             <div>
               <h3>T-Beam Design</h3>
               <p>Flanged beam design with effective flange width calculations</p>
-            </div>
-          </div>
-          <div className="planned-tool">
-            <span className="planned-icon">▥</span>
-            <div>
-              <h3>Slab Design</h3>
-              <p>One-way and two-way slab design with punching shear checks</p>
             </div>
           </div>
           <div className="planned-tool">
