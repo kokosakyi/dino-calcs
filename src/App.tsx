@@ -3,6 +3,14 @@ import { MathJaxContext } from 'better-react-mathjax';
 import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
+import { SteelHome } from './pages/SteelHome';
+import { ConcreteHome } from './pages/ConcreteHome';
+import { ConcreteBeamDesign } from './pages/concrete/ConcreteBeamDesign';
+import { WoodHome } from './pages/WoodHome';
+import { WoodJoistDesign } from './pages/wood/WoodJoistDesign';
+import { WoodBuiltUpBeam } from './pages/wood/WoodBuiltUpBeam';
+import { WoodSawnTimberBeam } from './pages/wood/WoodSawnTimberBeam';
+import { WoodBiaxialBending } from './pages/wood/WoodBiaxialBending';
 import { BeamDesign } from './pages/BeamDesign';
 import { ChannelBeamDesign } from './pages/ChannelBeamDesign';
 import { SBeamDesign } from './pages/SBeamDesign';
@@ -36,7 +44,10 @@ function App() {
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
+
+              {/* Steel Design - CSA S16-19 */}
               <Route path="steel">
+                <Route index element={<SteelHome />} />
                 <Route path="beam-design" element={<BeamDesign />} />
                 <Route path="channel-beam-design" element={<ChannelBeamDesign />} />
                 <Route path="s-beam-design" element={<SBeamDesign />} />
@@ -49,6 +60,22 @@ function App() {
                 <Route path="baseplate-design" element={<BaseplateDesign />} />
                 <Route path="section-browser" element={<SectionBrowser />} />
               </Route>
+
+              {/* Concrete Design - CSA A23.3 */}
+              <Route path="concrete">
+                <Route index element={<ConcreteHome />} />
+                <Route path="beam-design" element={<ConcreteBeamDesign />} />
+              </Route>
+
+              {/* Wood Design - CSA O86 */}
+              <Route path="wood">
+                <Route index element={<WoodHome />} />
+                <Route path="joist-design" element={<WoodJoistDesign />} />
+                <Route path="built-up-beam" element={<WoodBuiltUpBeam />} />
+                <Route path="sawn-timber-beam" element={<WoodSawnTimberBeam />} />
+                <Route path="biaxial-bending" element={<WoodBiaxialBending />} />
+              </Route>
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

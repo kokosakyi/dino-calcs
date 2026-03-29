@@ -13,6 +13,17 @@
   --warning-subtle: rgba(245, 158, 11, 0.12);
   --danger: #ef4444;
   --danger-subtle: rgba(239, 68, 68, 0.12);
+
+  /* Discipline Colors */
+  --steel: #3b82f6;
+  --steel-subtle: rgba(59, 130, 246, 0.1);
+  --steel-light: #60a5fa;
+  --concrete: #8b5cf6;
+  --concrete-subtle: rgba(139, 92, 246, 0.1);
+  --concrete-light: #a78bfa;
+  --wood: #f59e0b;
+  --wood-subtle: rgba(245, 158, 11, 0.1);
+  --wood-light: #fbbf24;
   
   /* Dark Theme Backgrounds */
   --bg-base: #0a0f1a;
@@ -82,6 +93,9 @@
   --success-subtle: rgba(16, 185, 129, 0.1);
   --warning-subtle: rgba(245, 158, 11, 0.1);
   --danger-subtle: rgba(239, 68, 68, 0.1);
+  --steel-subtle: rgba(59, 130, 246, 0.07);
+  --concrete-subtle: rgba(139, 92, 246, 0.07);
+  --wood-subtle: rgba(245, 158, 11, 0.07);
 }
 
 /* ===== Reset & Base ===== */
@@ -234,6 +248,172 @@ body {
   opacity: 0.85;
 }
 
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ===== Discipline Sections (Sidebar) ===== */
+.discipline-section {
+  margin-top: 0.5rem;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: all var(--transition-fast);
+}
+
+.discipline-section:first-of-type {
+  margin-top: 1.25rem;
+}
+
+.discipline-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.discipline-header:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.active-discipline .discipline-header {
+  color: var(--text-primary);
+}
+
+.discipline-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.steel-icon {
+  background: var(--steel-subtle);
+  color: var(--steel);
+}
+
+.concrete-icon {
+  background: var(--concrete-subtle);
+  color: var(--concrete);
+}
+
+.wood-icon {
+  background: var(--wood-subtle);
+  color: var(--wood);
+}
+
+.discipline-name {
+  flex: 1;
+  text-align: left;
+}
+
+.discipline-code {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.chevron {
+  transition: transform var(--transition-fast);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.discipline-nav {
+  padding: 0.25rem 0 0.5rem 0;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.discipline-nav > a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.discipline-nav > a li {
+  padding: 0.55rem 0.875rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  list-style: none;
+  transition: all var(--transition-fast);
+  margin-bottom: 0.125rem;
+}
+
+.discipline-nav > a li:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.discipline-nav > a.active li {
+  background: var(--primary);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.discipline-nav .nav-section {
+  margin-top: 0.75rem;
+}
+
+.coming-soon-item {
+  padding: 0.55rem 0.875rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  opacity: 0.6;
+  cursor: default;
+}
+
+.coming-soon-badge {
+  margin-left: auto;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.75px;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
 .sidebar-footer {
   margin-top: auto;
   padding-top: 1.25rem;
@@ -242,9 +422,34 @@ body {
   color: var(--text-muted);
 }
 
-.sidebar-footer .version {
-  color: var(--primary);
+.footer-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.code-tag {
+  font-size: 0.6rem;
   font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.5px;
+}
+
+.steel-tag {
+  background: var(--steel-subtle);
+  color: var(--steel);
+}
+
+.concrete-tag {
+  background: var(--concrete-subtle);
+  color: var(--concrete);
+}
+
+.wood-tag {
+  background: var(--wood-subtle);
+  color: var(--wood);
 }
 
 /* ===== Main Content ===== */
@@ -258,7 +463,7 @@ body {
 
 /* ===== Home Page ===== */
 .home-page {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
@@ -281,72 +486,129 @@ body {
 .hero p {
   color: var(--text-secondary);
   font-size: 1.125rem;
-  max-width: 500px;
+  max-width: 520px;
   margin: 0 auto;
 }
 
-.features-grid {
+/* Discipline Cards (Home) */
+.discipline-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
   margin-top: 2rem;
 }
 
-.feature-card {
+.discipline-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  padding: 1.75rem;
   text-decoration: none;
   color: inherit;
   transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
-.feature-card:not(.disabled):hover {
-  background: var(--bg-surface);
-  border-color: var(--primary);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg), var(--shadow-glow);
+.discipline-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
 }
 
-.feature-card.disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+.discipline-card.steel::before { background: var(--steel); }
+.discipline-card.concrete::before { background: var(--concrete); }
+.discipline-card.wood::before { background: var(--wood); }
+
+.discipline-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
-.feature-icon {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  color: var(--primary);
+.discipline-card.steel:hover { border-color: var(--steel); box-shadow: var(--shadow-lg), 0 0 20px var(--steel-subtle); }
+.discipline-card.concrete:hover { border-color: var(--concrete); box-shadow: var(--shadow-lg), 0 0 20px var(--concrete-subtle); }
+.discipline-card.wood:hover { border-color: var(--wood); box-shadow: var(--shadow-lg), 0 0 20px var(--wood-subtle); }
+
+.discipline-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
 }
 
-.feature-card h2 {
-  font-size: 1.125rem;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
+.discipline-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
 }
 
-.feature-card p {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-  line-height: 1.5;
-}
+.discipline-card.steel .discipline-card-icon { background: var(--steel-subtle); color: var(--steel); }
+.discipline-card.concrete .discipline-card-icon { background: var(--concrete-subtle); color: var(--concrete); }
+.discipline-card.wood .discipline-card-icon { background: var(--wood-subtle); color: var(--wood); }
 
-.feature-tag {
-  display: inline-block;
-  padding: 0.3rem 0.75rem;
-  background: var(--primary);
-  color: white;
-  border-radius: var(--radius-xl);
-  font-size: 0.65rem;
-  font-weight: 600;
+.discipline-card-tag {
+  font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.75px;
+  letter-spacing: 1px;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
 }
 
-.feature-tag.coming-soon {
-  background: var(--text-muted);
+.discipline-card.steel .discipline-card-tag { background: var(--steel-subtle); color: var(--steel); }
+.discipline-card.concrete .discipline-card-tag { background: var(--concrete-subtle); color: var(--concrete); }
+.discipline-card.wood .discipline-card-tag { background: var(--wood-subtle); color: var(--wood); }
+
+.discipline-card h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.25px;
+}
+
+.discipline-card > p {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  margin-bottom: 1.25rem;
+  flex: 1;
+}
+
+.discipline-card-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+}
+
+.discipline-card-tools span {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.discipline-card-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.discipline-card-status.available {
+  color: var(--success);
+}
+
+.discipline-card-status.upcoming {
+  color: var(--text-muted);
 }
 
 .standards-info {
@@ -355,6 +617,7 @@ body {
   background: var(--bg-surface);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-default);
+  margin-bottom: 2rem;
 }
 
 .standards-info h3 {
@@ -380,6 +643,221 @@ body {
   font-size: 0.85rem;
   color: var(--text-secondary);
   font-weight: 500;
+}
+
+/* ===== Discipline Home Pages ===== */
+.discipline-home {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.discipline-home-header {
+  margin-bottom: 2.5rem;
+}
+
+.discipline-home-title {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.discipline-home-title h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.steel-home .discipline-home-title h1 {
+  background: linear-gradient(135deg, var(--steel), var(--steel-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.concrete-home .discipline-home-title h1 {
+  background: linear-gradient(135deg, var(--concrete), var(--concrete-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.wood-home .discipline-home-title h1 {
+  background: linear-gradient(135deg, var(--wood), var(--wood-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.discipline-home-code {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1.25px;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+}
+
+.steel-home .discipline-home-code { background: var(--steel-subtle); color: var(--steel); }
+.concrete-home .discipline-home-code { background: var(--concrete-subtle); color: var(--concrete); }
+.wood-home .discipline-home-code { background: var(--wood-subtle); color: var(--wood); }
+
+.discipline-home-header > p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+/* Tool Categories */
+.tool-category {
+  margin-bottom: 2rem;
+}
+
+.tool-category > h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.category-desc {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.875rem;
+}
+
+.tool-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.125rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: all var(--transition-fast);
+}
+
+.tool-card:hover {
+  background: var(--bg-elevated);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.tool-card.tool-card-disabled {
+  position: relative;
+  opacity: 0.65;
+  pointer-events: none;
+  cursor: default;
+}
+
+.tool-card.tool-card-disabled:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border-default);
+  background: var(--bg-surface);
+}
+
+.tool-card .tool-icon {
+  font-size: 1.25rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-subtle);
+  color: var(--primary);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.tool-info h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.tool-info p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Coming Soon Section (Concrete/Wood home) */
+.coming-soon-section {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: var(--bg-surface);
+  border: 2px dashed var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.coming-soon-graphic {
+  margin-bottom: 1.5rem;
+  color: var(--text-muted);
+}
+
+.coming-soon-section > h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.coming-soon-section > p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+}
+
+.planned-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  text-align: left;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.planned-tool {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.planned-tool .planned-icon {
+  font-size: 1.125rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.planned-tool h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.planned-tool p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 /* ===== Beam Design Page ===== */
@@ -1759,6 +2237,14 @@ mjx-container[jax="CHTML"]:not([display="true"]) {
     height: auto;
     max-height: 400px;
   }
+  
+  .discipline-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .tool-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Mobile menu toggle - hidden on desktop */
@@ -1853,7 +2339,7 @@ mjx-container[jax="CHTML"]:not([display="true"]) {
     padding-top: 4.5rem;
   }
   
-  .features-grid {
+  .discipline-cards {
     grid-template-columns: 1fr;
   }
   
@@ -2961,4 +3447,159 @@ mjx-container[jax="CHTML"]:not([display="true"]) {
   display: flex;
   gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+/* Wood design — utilization summary */
+.wood-design-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.wood-util-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.wood-util-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  border-left: 4px solid var(--wood);
+}
+
+.wood-util-card.wood-util-ng {
+  border-left-color: var(--danger);
+}
+
+.wood-util-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.wood-util-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.wood-util-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Wood calculators — MathJax solution steps */
+.wood-calculation-steps-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.wood-calc-step-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--wood);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.01em;
+}
+
+.wood-calc-step-content {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.wood-calc-step-content .mj-renderer,
+.wood-calc-step-content mjx-container {
+  margin: 0.35rem 0;
+}
+
+.wood-calc-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+  line-height: 1.45;
+}
+
+/* Concrete design page */
+.concrete-design-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Concrete utilization summary */
+.concrete-util-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.concrete-util-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  border-left: 4px solid var(--concrete);
+}
+
+.concrete-util-card.concrete-util-ng {
+  border-left-color: var(--danger);
+}
+
+.concrete-util-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.concrete-util-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.concrete-util-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.concrete-util-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Concrete calculation step labels use concrete color */
+.concrete-design-page .wood-calc-step-label {
+  color: var(--concrete);
+}
+
+/* Checkbox field styling */
+.checkbox-field {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-field label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.checkbox-field input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--concrete);
+  cursor: pointer;
 }
