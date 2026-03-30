@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router';
+import { Link } from 'react-router';
 
 export function ConcreteHome() {
   return (
@@ -11,23 +11,24 @@ export function ConcreteHome() {
         <p>Reinforced concrete design tools per CSA A23.3 &mdash; Design of Concrete Structures</p>
       </div>
 
-      <div className="discipline-tools-section">
+      <div className="tool-category">
         <h2>Available Tools</h2>
+        <p className="category-desc">Flexure, shear, and crack control checks for beams and one-way slabs per CSA A23.3</p>
         <div className="tool-grid">
-          <NavLink to="/concrete/beam-design" className="tool-card">
+          <Link to="/concrete/beam-design" className="tool-card">
             <span className="tool-icon">⊢</span>
-            <div>
+            <div className="tool-info">
               <h3>Rectangular Beam Design</h3>
               <p>Flexural and shear design with crack control checks</p>
             </div>
-          </NavLink>
-          <NavLink to="/concrete/slab-design" className="tool-card">
+          </Link>
+          <Link to="/concrete/slab-design" className="tool-card">
             <span className="tool-icon">▥</span>
-            <div>
+            <div className="tool-info">
               <h3>One-Way Slab Design</h3>
               <p>Flexural design per 1 m strip with shear and crack control</p>
             </div>
-          </NavLink>
+          </Link>
         </div>
       </div>
 
