@@ -89,6 +89,19 @@ export function Layout() {
           </button>
         </div>
 
+        <div className="discipline-section">
+          <NavLink
+            to="/analysis"
+            className={({ isActive }) => (isActive ? 'active' : '')}
+            onClick={closeMobile}
+          >
+            <li>
+              <span className="nav-icon">◇</span>
+              Structural Analysis (SAS)
+            </li>
+          </NavLink>
+        </div>
+
         {/* Steel Design */}
         <div className={`discipline-section ${activeDiscipline === 'steel' ? 'active-discipline' : ''}`}>
           <button
@@ -227,6 +240,14 @@ export function Layout() {
                 <ul>
                   <NavLink to="/concrete/slab-design" className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobile}>
                     <li><span className="nav-icon">▥</span>One-Way Slab</li>
+                  </NavLink>
+                </ul>
+              </div>
+              <div className="nav-section">
+                <h3>Foundation</h3>
+                <ul>
+                  <NavLink to="/concrete/footing-design" className={({ isActive }) => isActive ? 'active' : ''} onClick={closeMobile}>
+                    <li><span className="nav-icon">▣</span>Isolated Footing</li>
                   </NavLink>
                 </ul>
                 <ul className="disabled">

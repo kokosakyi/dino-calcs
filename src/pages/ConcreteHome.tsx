@@ -13,7 +13,7 @@ export function ConcreteHome() {
 
       <div className="tool-category">
         <h2>Available Tools</h2>
-        <p className="category-desc">Flexure, shear, and crack control checks for beams and one-way slabs per CSA A23.3</p>
+        <p className="category-desc">Flexure, shear, and crack control checks for beams, slabs, and spread footings per CSA A23.3</p>
         <div className="tool-grid">
           <Link to="/concrete/beam-design" className="tool-card">
             <span className="tool-icon">⊢</span>
@@ -27,6 +27,13 @@ export function ConcreteHome() {
             <div className="tool-info">
               <h3>One-Way Slab Design</h3>
               <p>Flexural design per 1 m strip with shear and crack control</p>
+            </div>
+          </Link>
+          <Link to="/concrete/footing-design" className="tool-card">
+            <span className="tool-icon">▣</span>
+            <div className="tool-info">
+              <h3>Isolated Footing</h3>
+              <p>SLS bearing; ULS one-way shear, punching, flexure, and development</p>
             </div>
           </Link>
         </div>

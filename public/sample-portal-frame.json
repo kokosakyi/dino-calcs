@@ -1,0 +1,37 @@
+{
+  "nodes": [
+    { "id": "n1", "x": 0, "y": 0, "z": 0 },
+    { "id": "n2", "x": 0, "y": 5, "z": 0 },
+    { "id": "n3", "x": 3, "y": 5, "z": 0 },
+    { "id": "n4", "x": 6, "y": 5, "z": 0 },
+    { "id": "n5", "x": 6, "y": 0, "z": 0 }
+  ],
+  "elements": [
+    { "id": "e1", "type": "frame2d", "nodeI": "n1", "nodeJ": "n2", "sectionId": "sec_col" },
+    { "id": "e2", "type": "frame2d", "nodeI": "n2", "nodeJ": "n3", "sectionId": "sec_beam" },
+    { "id": "e3", "type": "frame2d", "nodeI": "n3", "nodeJ": "n4", "sectionId": "sec_beam" },
+    { "id": "e4", "type": "frame2d", "nodeI": "n4", "nodeJ": "n5", "sectionId": "sec_col" }
+  ],
+  "materials": [
+    { "id": "mat_steel", "name": "Steel", "E": 200e9, "G": 77e9, "nu": 0.3, "density": 7850 }
+  ],
+  "sections": [
+    { "id": "sec_col", "name": "W250x58 (Columns)", "A": 7420e-6, "Iy": 18.8e-6, "Iz": 87.3e-6, "J": 0.405e-6, "materialId": "mat_steel" },
+    { "id": "sec_beam", "name": "W310x97 (Beam)", "A": 12300e-6, "Iy": 72.2e-6, "Iz": 222e-6, "J": 1.16e-6, "materialId": "mat_steel" }
+  ],
+  "supports": [
+    { "nodeId": "n1", "dx": true, "dy": true, "dz": false, "rx": false, "ry": false, "rz": true },
+    { "nodeId": "n5", "dx": true, "dy": true, "dz": false, "rx": false, "ry": false, "rz": true }
+  ],
+  "pointLoads": [
+    { "id": "pl1", "nodeId": "n3", "fx": 0, "fy": -20000, "fz": 0, "mx": 0, "my": 0, "mz": 0, "loadCaseId": "lc1" },
+    { "id": "pl2", "nodeId": "n2", "fx": 5000, "fy": 0, "fz": 0, "mx": 0, "my": 0, "mz": 0, "loadCaseId": "lc1" }
+  ],
+  "distributedLoads": [
+    { "id": "dl1", "elementId": "e2", "wx1": 0, "wy1": -8000, "wz1": 0, "wx2": 0, "wy2": -8000, "wz2": 0, "loadCaseId": "lc1" },
+    { "id": "dl2", "elementId": "e3", "wx1": 0, "wy1": -8000, "wz1": 0, "wx2": 0, "wy2": -8000, "wz2": 0, "loadCaseId": "lc1" }
+  ],
+  "loadCases": [
+    { "id": "lc1", "name": "Dead + Live" }
+  ]
+}

@@ -7,6 +7,7 @@ import { SteelHome } from './pages/SteelHome';
 import { ConcreteHome } from './pages/ConcreteHome';
 import { ConcreteBeamDesign } from './pages/concrete/ConcreteBeamDesign';
 import { ConcreteSlabDesign } from './pages/concrete/ConcreteSlabDesign';
+import { ConcreteFootingDesign } from './pages/concrete/ConcreteFootingDesign';
 import { WoodHome } from './pages/WoodHome';
 import { WoodJoistDesign } from './pages/wood/WoodJoistDesign';
 import { WoodBuiltUpBeam } from './pages/wood/WoodBuiltUpBeam';
@@ -23,6 +24,7 @@ import { AngleCapacity } from './pages/AngleCapacity';
 import { SectionBrowser } from './pages/SectionBrowser';
 import { ColumnDesign } from './pages/ColumnDesign';
 import { BaseplateDesign } from './pages/BaseplateDesign';
+import { StructuralAnalysis } from './pages/StructuralAnalysis';
 import './App.css';
 
 const mathJaxConfig = {
@@ -43,6 +45,7 @@ function App() {
       <MathJaxContext config={mathJaxConfig}>
         <BrowserRouter>
           <Routes>
+            <Route path="/analysis" element={<StructuralAnalysis />} />
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
 
@@ -67,6 +70,7 @@ function App() {
                 <Route index element={<ConcreteHome />} />
                 <Route path="beam-design" element={<ConcreteBeamDesign />} />
                 <Route path="slab-design" element={<ConcreteSlabDesign />} />
+                <Route path="footing-design" element={<ConcreteFootingDesign />} />
               </Route>
 
               {/* Wood Design - CSA O86 */}

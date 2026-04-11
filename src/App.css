@@ -24,7 +24,10 @@
   --wood: #f59e0b;
   --wood-subtle: rgba(245, 158, 11, 0.1);
   --wood-light: #fbbf24;
-  
+  --analysis: #06b6d4;
+  --analysis-subtle: rgba(6, 182, 212, 0.12);
+  --analysis-light: #22d3ee;
+
   /* Dark Theme Backgrounds */
   --bg-base: #0a0f1a;
   --bg-surface: #111827;
@@ -501,7 +504,7 @@ body {
 /* Discipline Cards (Home) */
 .discipline-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.25rem;
   margin-top: 2rem;
 }
@@ -529,6 +532,7 @@ body {
   height: 3px;
 }
 
+.discipline-card.analysis::before { background: var(--analysis); }
 .discipline-card.steel::before { background: var(--steel); }
 .discipline-card.concrete::before { background: var(--concrete); }
 .discipline-card.wood::before { background: var(--wood); }
@@ -538,6 +542,7 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
+.discipline-card.analysis:hover { border-color: var(--analysis); box-shadow: var(--shadow-lg), 0 0 20px var(--analysis-subtle); }
 .discipline-card.steel:hover { border-color: var(--steel); box-shadow: var(--shadow-lg), 0 0 20px var(--steel-subtle); }
 .discipline-card.concrete:hover { border-color: var(--concrete); box-shadow: var(--shadow-lg), 0 0 20px var(--concrete-subtle); }
 .discipline-card.wood:hover { border-color: var(--wood); box-shadow: var(--shadow-lg), 0 0 20px var(--wood-subtle); }
@@ -558,6 +563,7 @@ body {
   border-radius: var(--radius-md);
 }
 
+.discipline-card.analysis .discipline-card-icon { background: var(--analysis-subtle); color: var(--analysis); }
 .discipline-card.steel .discipline-card-icon { background: var(--steel-subtle); color: var(--steel); }
 .discipline-card.concrete .discipline-card-icon { background: var(--concrete-subtle); color: var(--concrete); }
 .discipline-card.wood .discipline-card-icon { background: var(--wood-subtle); color: var(--wood); }
@@ -571,6 +577,7 @@ body {
   border-radius: var(--radius-sm);
 }
 
+.discipline-card.analysis .discipline-card-tag { background: var(--analysis-subtle); color: var(--analysis); }
 .discipline-card.steel .discipline-card-tag { background: var(--steel-subtle); color: var(--steel); }
 .discipline-card.concrete .discipline-card-tag { background: var(--concrete-subtle); color: var(--concrete); }
 .discipline-card.wood .discipline-card-tag { background: var(--wood-subtle); color: var(--wood); }
