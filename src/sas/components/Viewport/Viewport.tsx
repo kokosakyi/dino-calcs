@@ -1,15 +1,31 @@
+import { useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import { SceneContent } from './SceneContent';
 import { ViewPresetButtons, ViewPresetApplier } from './ViewPresetButtons';
+import { ViewportContextMenu } from './ViewportContextMenu';
 import { useTheme } from '../../../context/ThemeContext';
+import { useUIStore } from '../../stores/uiStore';
 
 export function Viewport() {
   const { theme } = useTheme();
   const clearColor = theme === 'dark' ? '#0a0f1a' : '#f8fafc';
+  const clearContextMenu = useUIStore(s => s.clearContextMenu);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handlePointerDown = useCallback(() => {
+    clearContextMenu();
+  }, [clearContextMenu]);
 
   return (
-    <div className="w-full h-full relative">
+    <div
+      className="w-full h-full relative"
+      onContextMenu={handleContextMenu}
+      onPointerDown={handlePointerDown}
+    >
       <Canvas
         camera={{ position: [10, 8, 10], fov: 50, near: 0.1, far: 10000 }}
         gl={{ antialias: true }}
@@ -28,6 +44,7 @@ export function Viewport() {
         </GizmoHelper>
       </Canvas>
       <ViewPresetButtons />
+      <ViewportContextMenu />
     </div>
   );
 }

@@ -31,7 +31,7 @@ export function AngleCapacity() {
   const [steelGrade, setSteelGrade] = useState<SteelGrade>('350W');
 
   // Compression inputs
-  const [effectiveLength, setEffectiveLength] = useState<number>(3000);
+  const [effectiveLength, setEffectiveLength] = useState<number | null>(3000);
 
   // Get unique section designations for dropdown
   const sectionOptions = useMemo(() => {
@@ -49,7 +49,7 @@ export function AngleCapacity() {
 
   // Calculate capacities
   const capacityResult = useMemo((): AngleCapacityResult | null => {
-    if (!selectedSection) return null;
+    if (!selectedSection || effectiveLength == null) return null;
 
     const { Fy } = STEEL_PROPERTIES[steelGrade];
 
@@ -175,7 +175,7 @@ export function AngleCapacity() {
       </section>
 
       {/* Section 2: Capacity Summary */}
-      {capacityResult && (
+      {capacityResult && effectiveLength != null && (
         <section className="calculations-panel">
           <AngleCapacitySummary
             result={capacityResult}

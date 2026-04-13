@@ -206,7 +206,8 @@ export function WoodSawnTimberBeam() {
             <InputField
               label="Factored loading"
               value={factoredLoading}
-              onChange={setFactoredLoading}
+              onChange={(v) => v != null && setFactoredLoading(v)}
+              allowEmpty={false}
               unit="kPa"
               min={0}
               step={0.1}
@@ -214,7 +215,8 @@ export function WoodSawnTimberBeam() {
             <InputField
               label="Service loading"
               value={serviceLoading}
-              onChange={setServiceLoading}
+              onChange={(v) => v != null && setServiceLoading(v)}
+              allowEmpty={false}
               unit="kPa"
               min={0}
               step={0.1}
@@ -222,16 +224,18 @@ export function WoodSawnTimberBeam() {
             <InputField
               label="Tributary width"
               value={tributaryWidth}
-              onChange={setTributaryWidth}
+              onChange={(v) => v != null && setTributaryWidth(v)}
+              allowEmpty={false}
               unit="mm"
               min={1}
               step={50}
             />
-            <InputField label="Beam span" value={beamSpan} onChange={setBeamSpan} unit="mm" min={1} step={100} />
+            <InputField label="Beam span" value={beamSpan} onChange={(v) => v != null && setBeamSpan(v)} allowEmpty={false} unit="mm" min={1} step={100} />
             <InputField
               label="Bearing length"
               value={bearingLength}
-              onChange={setBearingLength}
+              onChange={(v) => v != null && setBearingLength(v)}
+              allowEmpty={false}
               unit="mm"
               min={1}
               step={10}
@@ -239,12 +243,13 @@ export function WoodSawnTimberBeam() {
             <InputField
               label="Unsupported length"
               value={unsupportedLength}
-              onChange={setUnsupportedLength}
+              onChange={(v) => v != null && setUnsupportedLength(v)}
+              allowEmpty={false}
               unit="mm"
               min={0}
               step={100}
             />
-            <InputField label="Notch depth" value={notchDepth} onChange={setNotchDepth} unit="mm" min={0} step={1} />
+            <InputField label="Notch depth" value={notchDepth} onChange={(v) => v != null && setNotchDepth(v)} allowEmpty={false} unit="mm" min={0} step={1} />
           </div>
 
           <div className="input-group">

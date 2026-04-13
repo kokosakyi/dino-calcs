@@ -2,18 +2,16 @@ import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Plus } from 'lucide-react';
 import { useModelStore } from '../../stores/modelStore';
+import { NumericField } from '../inputs/NumericField';
+
+const secFieldClass =
+  'flex-1 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] text-sm px-2 py-1.5 rounded border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)]';
 
 function Field({ label, value, onChange, unit }: { label: string; value: number; onChange: (v: number) => void; unit: string }) {
   return (
     <div className="flex items-center gap-2">
       <label className="text-sm text-[var(--color-text-muted)] w-16">{label}</label>
-      <input
-        type="number"
-        value={value}
-        onChange={e => onChange(parseFloat(e.target.value) || 0)}
-        className="flex-1 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] text-sm px-2 py-1.5 rounded border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)]"
-        step="any"
-      />
+      <NumericField value={value} onChange={onChange} className={secFieldClass} />
       <span className="text-xs text-[var(--color-text-muted)] w-10">{unit}</span>
     </div>
   );

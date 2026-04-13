@@ -199,27 +199,27 @@ export function ConcreteFootingDesign() {
         <div className="input-groups-container">
           <div className="input-group">
             <h3>Column &amp; loads (unfactored service)</h3>
-            <InputField label="Column c_x" value={cx} onChange={setCx} unit="mm" min={100} step={25} />
-            <InputField label="Column c_y" value={cy} onChange={setCy} unit="mm" min={100} step={25} />
-            <InputField label="Dead load (D)" value={D} onChange={setD} unit="kN" min={0} step={10} />
-            <InputField label="Live load (L)" value={L} onChange={setL} unit="kN" min={0} step={10} />
+            <InputField label="Column c_x" value={cx} onChange={(v) => v != null && setCx(v)} allowEmpty={false} unit="mm" min={100} step={25} />
+            <InputField label="Column c_y" value={cy} onChange={(v) => v != null && setCy(v)} allowEmpty={false} unit="mm" min={100} step={25} />
+            <InputField label="Dead load (D)" value={D} onChange={(v) => v != null && setD(v)} allowEmpty={false} unit="kN" min={0} step={10} />
+            <InputField label="Live load (L)" value={L} onChange={(v) => v != null && setL(v)} allowEmpty={false} unit="kN" min={0} step={10} />
           </div>
 
           <div className="input-group">
             <h3>Footing &amp; soil</h3>
-            <InputField label="Footing width (B)" value={B} onChange={setB} unit="mm" min={cx + 100} step={100} />
-            <InputField label="Footing length (L)" value={Lf} onChange={setLf} unit="mm" min={cy + 100} step={100} />
-            <InputField label="Footing thickness (h)" value={h} onChange={setH} unit="mm" min={200} step={25} />
-            <InputField label="Allowable bearing q_all (SLS)" value={qAll} onChange={setQAll} unit="kPa" min={1} step={5} />
-            <InputField label="Backfill depth above top of footing" value={bfDepth} onChange={setBfDepth} unit="mm" min={0} step={50} />
-            <InputField label="Soil unit weight (γ)" value={gammaSoil} onChange={setGammaSoil} unit="kN/m³" min={5} step={1} />
+            <InputField label="Footing width (B)" value={B} onChange={(v) => v != null && setB(v)} allowEmpty={false} unit="mm" min={cx + 100} step={100} />
+            <InputField label="Footing length (L)" value={Lf} onChange={(v) => v != null && setLf(v)} allowEmpty={false} unit="mm" min={cy + 100} step={100} />
+            <InputField label="Footing thickness (h)" value={h} onChange={(v) => v != null && setH(v)} allowEmpty={false} unit="mm" min={200} step={25} />
+            <InputField label="Allowable bearing q_all (SLS)" value={qAll} onChange={(v) => v != null && setQAll(v)} allowEmpty={false} unit="kPa" min={1} step={5} />
+            <InputField label="Backfill depth above top of footing" value={bfDepth} onChange={(v) => v != null && setBfDepth(v)} allowEmpty={false} unit="mm" min={0} step={50} />
+            <InputField label="Soil unit weight (γ)" value={gammaSoil} onChange={(v) => v != null && setGammaSoil(v)} allowEmpty={false} unit="kN/m³" min={5} step={1} />
           </div>
 
           <div className="input-group">
             <h3>Materials</h3>
             <CustomDropdown label="f'c" options={fcOptions} value={String(fc)} onChange={(v) => setFc(Number(v))} />
             <CustomDropdown label="fy" options={fyOptions} value={String(fy)} onChange={(v) => setFy(Number(v))} />
-            <InputField label="Bottom cover" value={cover} onChange={setCover} unit="mm" min={50} step={5} />
+            <InputField label="Bottom cover" value={cover} onChange={(v) => v != null && setCover(v)} allowEmpty={false} unit="mm" min={50} step={5} />
           </div>
 
           <div className="input-group">

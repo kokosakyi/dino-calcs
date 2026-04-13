@@ -13,23 +13,23 @@ export function BaseplateDesign() {
   const [selectedDesignation, setSelectedDesignation] = useState<string>('W310x97');
 
   // Factored loads
-  const [Cf, setCf] = useState<number>(500);
-  const [Mx, setMx] = useState<number>(0);
-  const [My, setMy] = useState<number>(0);
+  const [Cf, setCf] = useState<number | null>(500);
+  const [Mx, setMx] = useState<number | null>(0);
+  const [My, setMy] = useState<number | null>(0);
 
   // Materials
   const [Fy_bp, setFy_bp] = useState<number>(300);
   const [fc, setFc] = useState<number>(30);
 
   // Baseplate dimensions (user-overridable)
-  const [B_plate, setB_plate] = useState<number>(500);
-  const [N_plate, setN_plate] = useState<number>(500);
+  const [B_plate, setB_plate] = useState<number | null>(500);
+  const [N_plate, setN_plate] = useState<number | null>(500);
 
   // Pedestal dimensions
-  const [B_conc, setB_conc] = useState<number>(600);
-  const [N_conc, setN_conc] = useState<number>(600);
-  const [grout, setGrout] = useState<number>(25);
-  const [overhang, setOverhang] = useState<number>(100);
+  const [B_conc, setB_conc] = useState<number | null>(600);
+  const [N_conc, setN_conc] = useState<number | null>(600);
+  const [grout, setGrout] = useState<number | null>(25);
+  const [overhang, setOverhang] = useState<number | null>(100);
 
   const sectionOptions = useMemo(() => {
     const sections = columnType === 'W'
@@ -51,7 +51,7 @@ export function BaseplateDesign() {
 
   // Auto-compute default B/N when section changes
   useEffect(() => {
-    if (selectedSection) {
+    if (selectedSection && overhang != null) {
       const d = parseFloat(selectedSection.D || '0');
       const b = parseFloat(selectedSection.B || '0');
       const autoSize = Math.round((Math.max(d, b) + 2 * overhang) / 10) * 10;
@@ -71,7 +71,12 @@ export function BaseplateDesign() {
   };
 
   const result: BaseplateDesignResult | null = useMemo(() => {
-    if (!selectedSection || Cf <= 0) return null;
+    if (
+      !selectedSection || Cf == null || Mx == null || My == null
+      || B_plate == null || N_plate == null || B_conc == null || N_conc == null
+      || grout == null || overhang == null
+    ) return null;
+    if (Cf <= 0) return null;
 
     const d_col = parseFloat(selectedSection.D || '0');
     const b_f_val = parseFloat(selectedSection.B || '0');
@@ -334,7 +339,10 @@ export function BaseplateDesign() {
       )}
 
       {/* Detailed Calculations */}
-      {result && result.status === 'converged' && selectedSection && (
+      {result && result.status === 'converged' && selectedSection
+        && Cf != null && Mx != null && My != null
+        && B_plate != null && N_plate != null
+        && B_conc != null && N_conc != null && grout != null && overhang != null && (
         <section className="calculations-panel">
           <BaseplateDesignSummary
             result={result}

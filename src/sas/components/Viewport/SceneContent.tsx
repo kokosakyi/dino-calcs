@@ -18,6 +18,8 @@ export function SceneContent() {
   const snapToGrid = useUIStore(s => s.snapToGrid);
   const gridSpacing = useUIStore(s => s.gridSpacing);
   const setCursorWorldPos = useUIStore(s => s.setCursorWorldPos);
+  const setContextMenu = useUIStore(s => s.setContextMenu);
+  const clearContextMenu = useUIStore(s => s.clearContextMenu);
   const addNode = useModelStore(s => s.addNode);
   const addElement = useModelStore(s => s.addElement);
   const defaultElementType = useUIStore(s => s.defaultElementType);
@@ -47,6 +49,26 @@ export function SceneContent() {
     const snapped = snapPoint(intersection.current);
     setCursorWorldPos({ x: snapped.x, y: snapped.y, z: snapped.z });
   }, [raycaster, snapPoint, setCursorWorldPos]);
+
+  const handlePointerDown = useCallback((e: any) => {
+    if ((e.button ?? e.nativeEvent?.button) === 2) {
+      e.stopPropagation();
+      clearContextMenu();
+      raycaster.ray.intersectPlane(groundPlane.current, intersection.current);
+      const snapped = snapPoint(intersection.current);
+      const cx = e.nativeEvent?.clientX ?? e.clientX ?? 0;
+      const cy = e.nativeEvent?.clientY ?? e.clientY ?? 0;
+      setContextMenu({
+        x: cx,
+        y: cy,
+        worldPos: {
+          x: parseFloat(snapped.x.toFixed(4)),
+          y: parseFloat(snapped.y.toFixed(4)),
+          z: parseFloat(snapped.z.toFixed(4)),
+        },
+      });
+    }
+  }, [raycaster, snapPoint, setContextMenu, clearContextMenu]);
 
   const handlePlaneClick = useCallback((e: any) => {
     e.stopPropagation();
@@ -83,12 +105,12 @@ export function SceneContent() {
   return (
     <>
       <Grid />
-      {/* Invisible ground plane for picking */}
       {/* Invisible XY picking plane at z=0 */}
       <mesh
         position={[0, 0, 0]}
         onClick={handlePlaneClick}
         onPointerMove={handlePointerMove}
+        onPointerDown={handlePointerDown}
         visible={false}
       >
         <planeGeometry args={[200, 200]} />

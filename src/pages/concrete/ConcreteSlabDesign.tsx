@@ -172,14 +172,14 @@ export function ConcreteSlabDesign() {
         <div className="input-groups-container">
           <div className="input-group">
             <h3>Factored loads (per metre)</h3>
-            <InputField label="Factored moment (Mf)" value={Mf} onChange={setMf} unit="kN·m/m" min={0} step={5} />
-            <InputField label="Factored shear (Vf)" value={Vf} onChange={setVf} unit="kN/m" min={0} step={5} />
+            <InputField label="Factored moment (Mf)" value={Mf} onChange={(v) => v != null && setMf(v)} allowEmpty={false} unit="kN·m/m" min={0} step={5} />
+            <InputField label="Factored shear (Vf)" value={Vf} onChange={(v) => v != null && setVf(v)} allowEmpty={false} unit="kN/m" min={0} step={5} />
           </div>
 
           <div className="input-group">
             <h3>Geometry</h3>
-            <InputField label="Clear span (Ln)" value={Ln} onChange={setLn} unit="mm" min={100} step={100} />
-            <InputField label="Slab thickness (h)" value={h} onChange={setH} unit="mm" min={75} step={10} />
+            <InputField label="Clear span (Ln)" value={Ln} onChange={(v) => v != null && setLn(v)} allowEmpty={false} unit="mm" min={100} step={100} />
+            <InputField label="Slab thickness (h)" value={h} onChange={(v) => v != null && setH(v)} allowEmpty={false} unit="mm" min={75} step={10} />
             <CustomDropdown
               label="Support condition"
               options={supportOptions}
@@ -205,7 +205,8 @@ export function ConcreteSlabDesign() {
             <InputField
               label="Concrete density"
               value={density}
-              onChange={setDensity}
+              onChange={(v) => v != null && setDensity(v)}
+              allowEmpty={false}
               unit="kg/m³"
               min={1400}
               max={2500}
@@ -224,7 +225,8 @@ export function ConcreteSlabDesign() {
             <InputField
               label={<>Cover <span style={{ opacity: 0.7 }}>(min {minCover} mm)</span></>}
               value={cover}
-              onChange={setCover}
+              onChange={(v) => v != null && setCover(v)}
+              allowEmpty={false}
               unit="mm"
               min={minCover}
               step={5}

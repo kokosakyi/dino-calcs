@@ -215,7 +215,8 @@ export function WoodBuiltUpBeam() {
             <InputField
               label="Number of plies"
               value={numberOfPlies}
-              onChange={setNumberOfPlies}
+              onChange={(v) => v != null && setNumberOfPlies(v)}
+              allowEmpty={false}
               unit=""
               min={1}
               step={1}
@@ -223,7 +224,8 @@ export function WoodBuiltUpBeam() {
             <InputField
               label="Factored loading"
               value={factoredLoading}
-              onChange={setFactoredLoading}
+              onChange={(v) => v != null && setFactoredLoading(v)}
+              allowEmpty={false}
               unit="kPa"
               min={0}
               step={0.1}
@@ -231,7 +233,8 @@ export function WoodBuiltUpBeam() {
             <InputField
               label="Service loading"
               value={serviceLoading}
-              onChange={setServiceLoading}
+              onChange={(v) => v != null && setServiceLoading(v)}
+              allowEmpty={false}
               unit="kPa"
               min={0}
               step={0.1}
@@ -239,7 +242,8 @@ export function WoodBuiltUpBeam() {
             <InputField
               label="Tributary width"
               value={tributaryWidth}
-              onChange={setTributaryWidth}
+              onChange={(v) => v != null && setTributaryWidth(v)}
+              allowEmpty={false}
               unit="mm"
               min={1}
               step={50}
@@ -247,7 +251,8 @@ export function WoodBuiltUpBeam() {
             <InputField
               label="Beam span"
               value={beamSpan}
-              onChange={setBeamSpan}
+              onChange={(v) => v != null && setBeamSpan(v)}
+              allowEmpty={false}
               unit="mm"
               min={1}
               step={100}
@@ -255,7 +260,8 @@ export function WoodBuiltUpBeam() {
             <InputField
               label="Bearing length"
               value={bearingLength}
-              onChange={setBearingLength}
+              onChange={(v) => v != null && setBearingLength(v)}
+              allowEmpty={false}
               unit="mm"
               min={1}
               step={10}
@@ -263,7 +269,8 @@ export function WoodBuiltUpBeam() {
             <InputField
               label="Unsupported length"
               value={unsupportedLength}
-              onChange={setUnsupportedLength}
+              onChange={(v) => v != null && setUnsupportedLength(v)}
+              allowEmpty={false}
               unit="mm"
               min={0}
               step={100}
@@ -271,7 +278,8 @@ export function WoodBuiltUpBeam() {
             <InputField
               label="Notch depth"
               value={notchDepth}
-              onChange={setNotchDepth}
+              onChange={(v) => v != null && setNotchDepth(v)}
+              allowEmpty={false}
               unit="mm"
               min={0}
               step={1}

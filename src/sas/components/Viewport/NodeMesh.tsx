@@ -13,9 +13,22 @@ function NodeSphere({ id, x, y, z }: { id: string; x: number; y: number; z: numb
   const addElement = useModelStore(s => s.addElement);
   const defaultElementType = useUIStore(s => s.defaultElementType);
   const activeSectionId = useUIStore(s => s.activeSectionId);
+  const setContextMenu = useUIStore(s => s.setContextMenu);
+  const clearContextMenu = useUIStore(s => s.clearContextMenu);
 
   const isSelected = selectedNodeIds.includes(id);
   const isMemberStart = memberStartNodeId === id;
+
+  const handlePointerDown = useCallback((e: any) => {
+    e.stopPropagation();
+    if ((e.button ?? e.nativeEvent?.button) === 2) {
+      clearContextMenu();
+      const cx = e.nativeEvent?.clientX ?? e.clientX ?? 0;
+      const cy = e.nativeEvent?.clientY ?? e.clientY ?? 0;
+      setSelectedNodes([id]);
+      setContextMenu({ x: cx, y: cy, nodeId: id });
+    }
+  }, [id, setSelectedNodes, setContextMenu, clearContextMenu]);
 
   const handleClick = useCallback((e: any) => {
     e.stopPropagation();
@@ -44,7 +57,7 @@ function NodeSphere({ id, x, y, z }: { id: string; x: number; y: number; z: numb
   return (
     <group position={[x, y, z]}>
       <mesh
-        onPointerDown={e => { e.stopPropagation(); }}
+        onPointerDown={handlePointerDown}
         onClick={handleClick}
       >
         <sphereGeometry args={[0.06, 16, 16]} />

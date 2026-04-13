@@ -11,6 +11,8 @@ function MemberLine({ id, nodeI, nodeJ }: { id: string; nodeI: string; nodeJ: st
   const setSelectedElements = useUIStore(s => s.setSelectedElements);
   const setSelectedNodes = useUIStore(s => s.setSelectedNodes);
   const activeTool = useUIStore(s => s.activeTool);
+  const setContextMenu = useUIStore(s => s.setContextMenu);
+  const clearContextMenu = useUIStore(s => s.clearContextMenu);
 
   const nI = getNode(nodeI);
   const nJ = getNode(nodeJ);
@@ -24,6 +26,18 @@ function MemberLine({ id, nodeI, nodeJ }: { id: string; nodeI: string; nodeJ: st
       new THREE.Vector3(nJ.x, nJ.y, nJ.z),
     ];
   }, [nI, nJ]);
+
+  const handlePointerDown = useCallback((e: any) => {
+    if ((e.button ?? e.nativeEvent?.button) === 2) {
+      e.stopPropagation();
+      clearContextMenu();
+      const cx = e.nativeEvent?.clientX ?? e.clientX ?? 0;
+      const cy = e.nativeEvent?.clientY ?? e.clientY ?? 0;
+      setSelectedElements([id]);
+      setSelectedNodes([]);
+      setContextMenu({ x: cx, y: cy, elementId: id });
+    }
+  }, [id, setSelectedElements, setSelectedNodes, setContextMenu, clearContextMenu]);
 
   const handleClick = useCallback((e: any) => {
     e.stopPropagation();
@@ -55,6 +69,7 @@ function MemberLine({ id, nodeI, nodeJ }: { id: string; nodeI: string; nodeJ: st
       points={points}
       color={color}
       lineWidth={isSelected ? 3 : 2}
+      onPointerDown={handlePointerDown}
       onClick={handleClick}
     />
   );

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { MathJax } from 'better-react-mathjax';
 import { InputField } from '../components/InputField';
+import { OptionalFilterInput } from '../components/OptionalFilterInput';
 import { SResultCard } from '../components/SResultCard';
 import { SDesignSummary } from '../components/SDesignSummary';
 import { CustomDropdown } from '../components/CustomDropdown';
@@ -13,27 +14,27 @@ export function SBeamDesign() {
   const [designMode, setDesignMode] = useState<BeamDesignMode>('direct');
 
   // Direct mode inputs (Mode 1)
-  const [factoredMoment, setFactoredMoment] = useState<number>(300);
-  const [factoredShear, setFactoredShear] = useState<number>(150);
+  const [factoredMoment, setFactoredMoment] = useState<number | null>(300);
+  const [factoredShear, setFactoredShear] = useState<number | null>(150);
 
   // UDL mode inputs (Mode 2)
-  const [span, setSpan] = useState<number>(5000);
-  const [udlULS, setUdlULS] = useState<number>(20);
-  const [udlSLS, setUdlSLS] = useState<number>(14);
+  const [span, setSpan] = useState<number | null>(5000);
+  const [udlULS, setUdlULS] = useState<number | null>(20);
+  const [udlSLS, setUdlSLS] = useState<number | null>(14);
   const [deflectionLimit, setDeflectionLimit] = useState<240 | 300 | 360>(360);
 
   // NBC mode inputs (Mode 3)
-  const [deadLoad, setDeadLoad] = useState<number>(4);
-  const [liveLoad, setLiveLoad] = useState<number>(8);
-  const [snowLoad, setSnowLoad] = useState<number>(2);
-  const [windLoad, setWindLoad] = useState<number>(0);
-  const [earthquakeLoad, setEarthquakeLoad] = useState<number>(0);
+  const [deadLoad, setDeadLoad] = useState<number | null>(4);
+  const [liveLoad, setLiveLoad] = useState<number | null>(8);
+  const [snowLoad, setSnowLoad] = useState<number | null>(2);
+  const [windLoad, setWindLoad] = useState<number | null>(0);
+  const [earthquakeLoad, setEarthquakeLoad] = useState<number | null>(0);
 
   // Common inputs
   const [steelGrade, setSteelGrade] = useState<SteelGrade>('350W');
   const [lateralSupport, setLateralSupport] = useState<LateralSupportType>('continuous');
-  const [unbracedLength, setUnbracedLength] = useState<number>(2500);
-  const [omega2, setOmega2] = useState<number>(1.0);
+  const [unbracedLength, setUnbracedLength] = useState<number | null>(2500);
+  const [omega2, setOmega2] = useState<number | null>(1.0);
   const [selectedResult, setSelectedResult] = useState<SDesignResult | null>(null);
   const [showAllResults, setShowAllResults] = useState(false);
 
@@ -62,6 +63,7 @@ export function SBeamDesign() {
   // Calculate Mf, Vf, and deflection requirements based on design mode
   const calculatedLoads = useMemo(() => {
     if (designMode === 'direct') {
+      if (factoredMoment == null || factoredShear == null) return null;
       return {
         Mf: factoredMoment,
         Vf: factoredShear,
@@ -69,11 +71,15 @@ export function SBeamDesign() {
         nbcResult: undefined as NBCCombinationResult | undefined,
       };
     } else if (designMode === 'udl') {
+      if (span == null || udlULS == null || udlSLS == null) return null;
       const { Mf, Vf } = calculateSimplySupported(udlULS, span);
       const deflectionResult = calculateRequiredIx(udlSLS, span, deflectionLimit);
       return { Mf, Vf, deflectionResult, nbcResult: undefined as NBCCombinationResult | undefined };
     } else {
-      // NBC mode
+      if (
+        span == null || deadLoad == null || liveLoad == null || snowLoad == null
+        || windLoad == null || earthquakeLoad == null
+      ) return null;
       const nbcResult = calculateNBCCombinations({
         span,
         deadLoad,
@@ -90,7 +96,9 @@ export function SBeamDesign() {
   }, [designMode, factoredMoment, factoredShear, span, udlULS, udlSLS, deflectionLimit, deadLoad, liveLoad, snowLoad, windLoad, earthquakeLoad]);
 
   const results = useMemo(() => {
+    if (!calculatedLoads) return [];
     const { Mf, Vf, deflectionResult } = calculatedLoads;
+    if (lateralSupport === 'unsupported' && (unbracedLength == null || omega2 == null)) return [];
     if (Mf <= 0 && Vf <= 0) return [];
 
     return findOptimalSSection(
@@ -100,8 +108,8 @@ export function SBeamDesign() {
         factoredShear: Vf || 0,
         steelGrade,
         lateralSupport,
-        unbracedLength: lateralSupport === 'unsupported' ? unbracedLength : undefined,
-        omega2: lateralSupport === 'unsupported' ? omega2 : undefined,
+        unbracedLength: lateralSupport === 'unsupported' ? (unbracedLength ?? undefined) : undefined,
+        omega2: lateralSupport === 'unsupported' ? (omega2 ?? undefined) : undefined,
         sectionFilters,
       },
       deflectionResult
@@ -335,7 +343,7 @@ export function SBeamDesign() {
         </div>
 
         {/* Calculated Loads Summary - for UDL and NBC modes */}
-        {(designMode === 'udl' || designMode === 'nbc') && (
+        {(designMode === 'udl' || designMode === 'nbc') && calculatedLoads && (
           <div className="calculated-loads-summary full-width">
             <h3>Calculated Design Values</h3>
 
@@ -464,56 +472,28 @@ export function SBeamDesign() {
                 <div className="filter-field">
                   <label>Min. Depth (d)</label>
                   <div className="filter-input-wrapper">
-                    <input
-                      type="number"
-                      value={minDepth ?? ''}
-                      onChange={(e) => setMinDepth(e.target.value ? Number(e.target.value) : undefined)}
-                      placeholder="Any"
-                      min={0}
-                      step={10}
-                    />
+                    <OptionalFilterInput value={minDepth} onChange={setMinDepth} min={0} />
                     <span className="filter-unit">mm</span>
                   </div>
                 </div>
                 <div className="filter-field">
                   <label>Min. Flange Width (b)</label>
                   <div className="filter-input-wrapper">
-                    <input
-                      type="number"
-                      value={minFlangeWidth ?? ''}
-                      onChange={(e) => setMinFlangeWidth(e.target.value ? Number(e.target.value) : undefined)}
-                      placeholder="Any"
-                      min={0}
-                      step={5}
-                    />
+                    <OptionalFilterInput value={minFlangeWidth} onChange={setMinFlangeWidth} min={0} />
                     <span className="filter-unit">mm</span>
                   </div>
                 </div>
                 <div className="filter-field">
                   <label>Min. Flange Thickness (t)</label>
                   <div className="filter-input-wrapper">
-                    <input
-                      type="number"
-                      value={minFlangeThickness ?? ''}
-                      onChange={(e) => setMinFlangeThickness(e.target.value ? Number(e.target.value) : undefined)}
-                      placeholder="Any"
-                      min={0}
-                      step={1}
-                    />
+                    <OptionalFilterInput value={minFlangeThickness} onChange={setMinFlangeThickness} min={0} />
                     <span className="filter-unit">mm</span>
                   </div>
                 </div>
                 <div className="filter-field">
                   <label>Min. Web Thickness (w)</label>
                   <div className="filter-input-wrapper">
-                    <input
-                      type="number"
-                      value={minWebThickness ?? ''}
-                      onChange={(e) => setMinWebThickness(e.target.value ? Number(e.target.value) : undefined)}
-                      placeholder="Any"
-                      min={0}
-                      step={1}
-                    />
+                    <OptionalFilterInput value={minWebThickness} onChange={setMinWebThickness} min={0} />
                     <span className="filter-unit">mm</span>
                   </div>
                 </div>
@@ -537,7 +517,7 @@ export function SBeamDesign() {
       </section>
 
       {/* Section 2: Design Calculations */}
-      {(selectedResult || optimalResult) && (
+      {(selectedResult || optimalResult) && calculatedLoads && (
         <section className="calculations-panel">
           <SDesignSummary
             result={selectedResult || optimalResult!}
@@ -546,8 +526,8 @@ export function SBeamDesign() {
             steelGrade={steelGrade}
             lateralSupport={lateralSupport}
             deflectionResult={calculatedLoads.deflectionResult}
-            span={designMode !== 'direct' ? span : undefined}
-            udlSLS={designMode === 'udl' ? udlSLS : calculatedLoads.nbcResult?.wSLS}
+            span={designMode !== 'direct' ? (span ?? undefined) : undefined}
+            udlSLS={designMode === 'udl' ? (udlSLS ?? undefined) : calculatedLoads.nbcResult?.wSLS}
           />
         </section>
       )}

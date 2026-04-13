@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { MathJax } from 'better-react-mathjax';
 import { InputField } from '../components/InputField';
+import { OptionalFilterInput } from '../components/OptionalFilterInput';
 import { ColumnResultCard } from '../components/ColumnResultCard';
 import { ColumnDesignSummary } from '../components/ColumnDesignSummary';
 import { CustomDropdown } from '../components/CustomDropdown';
@@ -9,9 +10,9 @@ import type { WSection, SteelGrade, ColumnDesignResult, BucklingAxis, SectionFil
 import wSections from '../assets/W_Section.json';
 
 export function ColumnDesign() {
-  const [factoredAxialLoad, setFactoredAxialLoad] = useState<number>(1500);
+  const [factoredAxialLoad, setFactoredAxialLoad] = useState<number | null>(1500);
   const [effectiveLengthFactor, setEffectiveLengthFactor] = useState<number>(1.0);
-  const [unbracedLength, setUnbracedLength] = useState<number>(4000);
+  const [unbracedLength, setUnbracedLength] = useState<number | null>(4000);
   const [steelGrade, setSteelGrade] = useState<SteelGrade>('350W');
   const [bucklingAxis, setBucklingAxis] = useState<BucklingAxis>('weak');
   const [selectedResult, setSelectedResult] = useState<ColumnDesignResult | null>(null);
@@ -39,6 +40,7 @@ export function ColumnDesign() {
   const activeFilterCount = sectionFilters ? Object.keys(sectionFilters).length : 0;
 
   const results = useMemo(() => {
+    if (factoredAxialLoad == null || unbracedLength == null) return [];
     if (factoredAxialLoad <= 0) return [];
 
     return findOptimalColumnSection(
@@ -165,56 +167,28 @@ export function ColumnDesign() {
                 <div className="filter-field">
                   <label>Min. Depth (d)</label>
                   <div className="filter-input-wrapper">
-                    <input
-                      type="number"
-                      value={minDepth ?? ''}
-                      onChange={(e) => setMinDepth(e.target.value ? Number(e.target.value) : undefined)}
-                      placeholder="Any"
-                      min={0}
-                      step={10}
-                    />
+                    <OptionalFilterInput value={minDepth} onChange={setMinDepth} min={0} />
                     <span className="filter-unit">mm</span>
                   </div>
                 </div>
                 <div className="filter-field">
                   <label>Min. Flange Width (b)</label>
                   <div className="filter-input-wrapper">
-                    <input
-                      type="number"
-                      value={minFlangeWidth ?? ''}
-                      onChange={(e) => setMinFlangeWidth(e.target.value ? Number(e.target.value) : undefined)}
-                      placeholder="Any"
-                      min={0}
-                      step={5}
-                    />
+                    <OptionalFilterInput value={minFlangeWidth} onChange={setMinFlangeWidth} min={0} />
                     <span className="filter-unit">mm</span>
                   </div>
                 </div>
                 <div className="filter-field">
                   <label>Min. Flange Thickness (t)</label>
                   <div className="filter-input-wrapper">
-                    <input
-                      type="number"
-                      value={minFlangeThickness ?? ''}
-                      onChange={(e) => setMinFlangeThickness(e.target.value ? Number(e.target.value) : undefined)}
-                      placeholder="Any"
-                      min={0}
-                      step={1}
-                    />
+                    <OptionalFilterInput value={minFlangeThickness} onChange={setMinFlangeThickness} min={0} />
                     <span className="filter-unit">mm</span>
                   </div>
                 </div>
                 <div className="filter-field">
                   <label>Min. Web Thickness (w)</label>
                   <div className="filter-input-wrapper">
-                    <input
-                      type="number"
-                      value={minWebThickness ?? ''}
-                      onChange={(e) => setMinWebThickness(e.target.value ? Number(e.target.value) : undefined)}
-                      placeholder="Any"
-                      min={0}
-                      step={1}
-                    />
+                    <OptionalFilterInput value={minWebThickness} onChange={setMinWebThickness} min={0} />
                     <span className="filter-unit">mm</span>
                   </div>
                 </div>
@@ -238,7 +212,7 @@ export function ColumnDesign() {
       </section>
 
       {/* Design Calculations */}
-      {(selectedResult || optimalResult) && (
+      {(selectedResult || optimalResult) && factoredAxialLoad != null && (
         <section className="calculations-panel">
           <ColumnDesignSummary
             result={selectedResult || optimalResult!}

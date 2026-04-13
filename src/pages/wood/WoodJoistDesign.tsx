@@ -201,7 +201,8 @@ export function WoodJoistDesign() {
             <InputField
               label="Factored loading (roof/floor pressure)"
               value={factoredLoading}
-              onChange={setFactoredLoading}
+              onChange={(v) => v != null && setFactoredLoading(v)}
+              allowEmpty={false}
               unit="kPa"
               min={0}
               step={0.1}
@@ -209,7 +210,8 @@ export function WoodJoistDesign() {
             <InputField
               label="Service loading (for deflection)"
               value={serviceLoading}
-              onChange={setServiceLoading}
+              onChange={(v) => v != null && setServiceLoading(v)}
+              allowEmpty={false}
               unit="kPa"
               min={0}
               step={0.1}
@@ -217,7 +219,8 @@ export function WoodJoistDesign() {
             <InputField
               label="Joist spacing (tributary width)"
               value={joistSpacing}
-              onChange={setJoistSpacing}
+              onChange={(v) => v != null && setJoistSpacing(v)}
+              allowEmpty={false}
               unit="mm"
               min={1}
               step={50}
@@ -225,7 +228,8 @@ export function WoodJoistDesign() {
             <InputField
               label="Joist span"
               value={joistSpan}
-              onChange={setJoistSpan}
+              onChange={(v) => v != null && setJoistSpan(v)}
+              allowEmpty={false}
               unit="mm"
               min={1}
               step={100}
@@ -233,7 +237,8 @@ export function WoodJoistDesign() {
             <InputField
               label="Bearing length"
               value={bearingLength}
-              onChange={setBearingLength}
+              onChange={(v) => v != null && setBearingLength(v)}
+              allowEmpty={false}
               unit="mm"
               min={1}
               step={10}
@@ -241,7 +246,8 @@ export function WoodJoistDesign() {
             <InputField
               label="Unsupported length (buckling)"
               value={unsupportedLength}
-              onChange={setUnsupportedLength}
+              onChange={(v) => v != null && setUnsupportedLength(v)}
+              allowEmpty={false}
               unit="mm"
               min={0}
               step={100}

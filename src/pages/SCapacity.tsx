@@ -29,8 +29,8 @@ export function SCapacity() {
   // Material and support inputs
   const [steelGrade, setSteelGrade] = useState<SteelGrade>('350W');
   const [lateralSupport, setLateralSupport] = useState<LateralSupportType>('continuous');
-  const [unbracedLength, setUnbracedLength] = useState<number>(3000);
-  const [omega2, setOmega2] = useState<number>(1.0);
+  const [unbracedLength, setUnbracedLength] = useState<number | null>(3000);
+  const [omega2, setOmega2] = useState<number | null>(1.0);
 
   // Get unique section designations for dropdown
   const sectionOptions = useMemo(() => {
@@ -49,6 +49,7 @@ export function SCapacity() {
   // Calculate capacities
   const capacityResult = useMemo((): SCapacityResult | null => {
     if (!selectedSection) return null;
+    if (lateralSupport === 'unsupported' && (unbracedLength == null || omega2 == null)) return null;
 
     const { Fy } = STEEL_PROPERTIES[steelGrade];
     const sectionClass = checkSSectionClass(selectedSection, Fy);
@@ -56,7 +57,7 @@ export function SCapacity() {
     let Mr: number;
     let ltbResult: LateralTorsionalBucklingResult | undefined;
 
-    if (lateralSupport === 'unsupported' && unbracedLength > 0) {
+    if (lateralSupport === 'unsupported' && unbracedLength != null && omega2 != null && unbracedLength > 0) {
       // Laterally unsupported - calculate LTB resistance
       if (sectionClass.overallClass <= 2) {
         ltbResult = calculateSLateralTorsionalBuckling(

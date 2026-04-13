@@ -187,15 +187,15 @@ export function ConcreteBeamDesign() {
         <div className="input-groups-container">
           <div className="input-group">
             <h3>Factored loads</h3>
-            <InputField label="Factored moment (Mf)" value={Mf} onChange={setMf} unit="kN·m" min={0} step={5} />
-            <InputField label="Factored shear (Vf)" value={Vf} onChange={setVf} unit="kN" min={0} step={5} />
+            <InputField label="Factored moment (Mf)" value={Mf} onChange={(v) => v != null && setMf(v)} allowEmpty={false} unit="kN·m" min={0} step={5} />
+            <InputField label="Factored shear (Vf)" value={Vf} onChange={(v) => v != null && setVf(v)} allowEmpty={false} unit="kN" min={0} step={5} />
           </div>
 
           <div className="input-group">
             <h3>Geometry</h3>
-            <InputField label="Clear span (Ln)" value={Ln} onChange={setLn} unit="mm" min={100} step={100} />
-            <InputField label="Beam width (b)" value={b} onChange={setB} unit="mm" min={100} step={25} />
-            <InputField label="Beam depth (h)" value={h} onChange={setH} unit="mm" min={100} step={25} />
+            <InputField label="Clear span (Ln)" value={Ln} onChange={(v) => v != null && setLn(v)} allowEmpty={false} unit="mm" min={100} step={100} />
+            <InputField label="Beam width (b)" value={b} onChange={(v) => v != null && setB(v)} allowEmpty={false} unit="mm" min={100} step={25} />
+            <InputField label="Beam depth (h)" value={h} onChange={(v) => v != null && setH(v)} allowEmpty={false} unit="mm" min={100} step={25} />
             <CustomDropdown
               label="Support condition"
               options={supportOptions}
@@ -221,7 +221,8 @@ export function ConcreteBeamDesign() {
             <InputField
               label="Concrete density"
               value={density}
-              onChange={setDensity}
+              onChange={(v) => v != null && setDensity(v)}
+              allowEmpty={false}
               unit="kg/m³"
               min={1400}
               max={2500}
@@ -246,7 +247,8 @@ export function ConcreteBeamDesign() {
             <InputField
               label={<>Cover <span style={{ opacity: 0.7 }}>(min {minCover} mm)</span></>}
               value={cover}
-              onChange={setCover}
+              onChange={(v) => v != null && setCover(v)}
+              allowEmpty={false}
               unit="mm"
               min={minCover}
               step={5}

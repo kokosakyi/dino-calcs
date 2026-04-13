@@ -51,6 +51,16 @@ interface UIState {
 
   cursorWorldPos: { x: number; y: number; z: number };
   setCursorWorldPos: (pos: { x: number; y: number; z: number }) => void;
+
+  contextMenu: {
+    x: number;
+    y: number;
+    nodeId?: string;
+    elementId?: string;
+    worldPos?: { x: number; y: number; z: number };
+  } | null;
+  setContextMenu: (menu: UIState['contextMenu']) => void;
+  clearContextMenu: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -111,4 +121,8 @@ export const useUIStore = create<UIState>((set) => ({
 
   cursorWorldPos: { x: 0, y: 0, z: 0 },
   setCursorWorldPos: (pos) => set({ cursorWorldPos: pos }),
+
+  contextMenu: null,
+  setContextMenu: (menu) => set({ contextMenu: menu }),
+  clearContextMenu: () => set({ contextMenu: null }),
 }));

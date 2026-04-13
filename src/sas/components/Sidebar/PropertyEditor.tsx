@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useModelStore } from '../../stores/modelStore';
 import { useUIStore } from '../../stores/uiStore';
 import { useResultStore } from '../../stores/resultStore';
+import { NumericField } from '../inputs/NumericField';
 
 function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -12,17 +13,8 @@ function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function NumInput({ value, onChange, step = 0.1 }: { value: number; onChange: (v: number) => void; step?: number }) {
-  return (
-    <input
-      type="number"
-      value={value}
-      onChange={e => onChange(parseFloat(e.target.value) || 0)}
-      className="w-full bg-[var(--color-bg-panel)] text-[var(--color-text-primary)] text-sm px-2 py-1.5 rounded border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)]"
-      step={step}
-    />
-  );
-}
+const numInputClass =
+  'w-full bg-[var(--color-bg-panel)] text-[var(--color-text-primary)] text-sm px-2 py-1.5 rounded border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)]';
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -70,9 +62,9 @@ function NodeEditor({ nodeId }: { nodeId: string }) {
   return (
     <div>
       <SectionHeading title={`Node: ${node.id}`} onDelete={() => { clearResults(); removeNode(nodeId); }} />
-      <FieldRow label="X"><NumInput value={node.x} onChange={v => handleUpdate({ x: v })} /></FieldRow>
-      <FieldRow label="Y"><NumInput value={node.y} onChange={v => handleUpdate({ y: v })} /></FieldRow>
-      <FieldRow label="Z"><NumInput value={node.z} onChange={v => handleUpdate({ z: v })} /></FieldRow>
+      <FieldRow label="X"><NumericField value={node.x} onChange={v => handleUpdate({ x: v })} className={numInputClass} /></FieldRow>
+      <FieldRow label="Y"><NumericField value={node.y} onChange={v => handleUpdate({ y: v })} className={numInputClass} /></FieldRow>
+      <FieldRow label="Z"><NumericField value={node.z} onChange={v => handleUpdate({ z: v })} className={numInputClass} /></FieldRow>
     </div>
   );
 }
@@ -121,12 +113,12 @@ function PointLoadEditor({ loadId }: { loadId: string }) {
   return (
     <div>
       <SectionHeading title={`Point Load: ${pl.id}`} onDelete={() => { clearResults(); removePointLoad(loadId); }} />
-      <FieldRow label="Fx (N)"><NumInput value={pl.fx} onChange={v => update('fx', v)} step={1000} /></FieldRow>
-      <FieldRow label="Fy (N)"><NumInput value={pl.fy} onChange={v => update('fy', v)} step={1000} /></FieldRow>
-      <FieldRow label="Fz (N)"><NumInput value={pl.fz} onChange={v => update('fz', v)} step={1000} /></FieldRow>
-      <FieldRow label="Mx"><NumInput value={pl.mx} onChange={v => update('mx', v)} step={100} /></FieldRow>
-      <FieldRow label="My"><NumInput value={pl.my} onChange={v => update('my', v)} step={100} /></FieldRow>
-      <FieldRow label="Mz"><NumInput value={pl.mz} onChange={v => update('mz', v)} step={100} /></FieldRow>
+      <FieldRow label="Fx (N)"><NumericField value={pl.fx} onChange={v => update('fx', v)} step={1000} className={numInputClass} /></FieldRow>
+      <FieldRow label="Fy (N)"><NumericField value={pl.fy} onChange={v => update('fy', v)} step={1000} className={numInputClass} /></FieldRow>
+      <FieldRow label="Fz (N)"><NumericField value={pl.fz} onChange={v => update('fz', v)} step={1000} className={numInputClass} /></FieldRow>
+      <FieldRow label="Mx"><NumericField value={pl.mx} onChange={v => update('mx', v)} step={100} className={numInputClass} /></FieldRow>
+      <FieldRow label="My"><NumericField value={pl.my} onChange={v => update('my', v)} step={100} className={numInputClass} /></FieldRow>
+      <FieldRow label="Mz"><NumericField value={pl.mz} onChange={v => update('mz', v)} step={100} className={numInputClass} /></FieldRow>
     </div>
   );
 }
@@ -189,12 +181,12 @@ function DistLoadEditor({ loadId }: { loadId: string }) {
   return (
     <div>
       <SectionHeading title={`Dist. Load: ${dl.id}`} onDelete={() => { clearResults(); removeDistributedLoad(loadId); }} />
-      <FieldRow label="wx1"><NumInput value={dl.wx1} onChange={v => update('wx1', v)} step={1000} /></FieldRow>
-      <FieldRow label="wy1"><NumInput value={dl.wy1} onChange={v => update('wy1', v)} step={1000} /></FieldRow>
-      <FieldRow label="wz1"><NumInput value={dl.wz1} onChange={v => update('wz1', v)} step={1000} /></FieldRow>
-      <FieldRow label="wx2"><NumInput value={dl.wx2} onChange={v => update('wx2', v)} step={1000} /></FieldRow>
-      <FieldRow label="wy2"><NumInput value={dl.wy2} onChange={v => update('wy2', v)} step={1000} /></FieldRow>
-      <FieldRow label="wz2"><NumInput value={dl.wz2} onChange={v => update('wz2', v)} step={1000} /></FieldRow>
+      <FieldRow label="wx1"><NumericField value={dl.wx1} onChange={v => update('wx1', v)} step={1000} className={numInputClass} /></FieldRow>
+      <FieldRow label="wy1"><NumericField value={dl.wy1} onChange={v => update('wy1', v)} step={1000} className={numInputClass} /></FieldRow>
+      <FieldRow label="wz1"><NumericField value={dl.wz1} onChange={v => update('wz1', v)} step={1000} className={numInputClass} /></FieldRow>
+      <FieldRow label="wx2"><NumericField value={dl.wx2} onChange={v => update('wx2', v)} step={1000} className={numInputClass} /></FieldRow>
+      <FieldRow label="wy2"><NumericField value={dl.wy2} onChange={v => update('wy2', v)} step={1000} className={numInputClass} /></FieldRow>
+      <FieldRow label="wz2"><NumericField value={dl.wz2} onChange={v => update('wz2', v)} step={1000} className={numInputClass} /></FieldRow>
     </div>
   );
 }

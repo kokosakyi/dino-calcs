@@ -13,21 +13,21 @@ export function AngleBeamDesign() {
   const [designMode, setDesignMode] = useState<BeamDesignMode>('direct');
 
   // Direct mode inputs (Mode 1)
-  const [factoredMoment, setFactoredMoment] = useState<number>(50);
-  const [factoredShear, setFactoredShear] = useState<number>(30);
+  const [factoredMoment, setFactoredMoment] = useState<number | null>(50);
+  const [factoredShear, setFactoredShear] = useState<number | null>(30);
 
   // UDL mode inputs (Mode 2)
-  const [span, setSpan] = useState<number>(3000);
-  const [udlULS, setUdlULS] = useState<number>(10);
-  const [udlSLS, setUdlSLS] = useState<number>(7);
+  const [span, setSpan] = useState<number | null>(3000);
+  const [udlULS, setUdlULS] = useState<number | null>(10);
+  const [udlSLS, setUdlSLS] = useState<number | null>(7);
   const [deflectionLimit, setDeflectionLimit] = useState<240 | 300 | 360>(360);
 
   // NBC mode inputs (Mode 3)
-  const [deadLoad, setDeadLoad] = useState<number>(3);
-  const [liveLoad, setLiveLoad] = useState<number>(5);
-  const [snowLoad, setSnowLoad] = useState<number>(1);
-  const [windLoad, setWindLoad] = useState<number>(0);
-  const [earthquakeLoad, setEarthquakeLoad] = useState<number>(0);
+  const [deadLoad, setDeadLoad] = useState<number | null>(3);
+  const [liveLoad, setLiveLoad] = useState<number | null>(5);
+  const [snowLoad, setSnowLoad] = useState<number | null>(1);
+  const [windLoad, setWindLoad] = useState<number | null>(0);
+  const [earthquakeLoad, setEarthquakeLoad] = useState<number | null>(0);
 
   // Common inputs
   const [steelGrade, setSteelGrade] = useState<SteelGrade>('350W');
@@ -38,6 +38,7 @@ export function AngleBeamDesign() {
   // Calculate Mf, Vf, and deflection requirements based on design mode
   const calculatedLoads = useMemo(() => {
     if (designMode === 'direct') {
+      if (factoredMoment == null || factoredShear == null) return null;
       return {
         Mf: factoredMoment,
         Vf: factoredShear,
@@ -45,11 +46,15 @@ export function AngleBeamDesign() {
         nbcResult: undefined as NBCCombinationResult | undefined,
       };
     } else if (designMode === 'udl') {
+      if (span == null || udlULS == null || udlSLS == null) return null;
       const { Mf, Vf } = calculateSimplySupported(udlULS, span);
       const deflectionResult = calculateRequiredIx(udlSLS, span, deflectionLimit);
       return { Mf, Vf, deflectionResult, nbcResult: undefined as NBCCombinationResult | undefined };
     } else {
-      // NBC mode
+      if (
+        span == null || deadLoad == null || liveLoad == null || snowLoad == null
+        || windLoad == null || earthquakeLoad == null
+      ) return null;
       const nbcResult = calculateNBCCombinations({
         span,
         deadLoad,
@@ -66,6 +71,7 @@ export function AngleBeamDesign() {
   }, [designMode, factoredMoment, factoredShear, span, udlULS, udlSLS, deflectionLimit, deadLoad, liveLoad, snowLoad, windLoad, earthquakeLoad]);
 
   const results = useMemo(() => {
+    if (!calculatedLoads) return [];
     const { Mf, Vf, deflectionResult } = calculatedLoads;
     if (Mf <= 0 && Vf <= 0) return [];
 
@@ -286,7 +292,7 @@ export function AngleBeamDesign() {
         </div>
 
         {/* Calculated Loads Summary - for UDL and NBC modes */}
-        {(designMode === 'udl' || designMode === 'nbc') && (
+        {(designMode === 'udl' || designMode === 'nbc') && calculatedLoads && (
           <div className="calculated-loads-summary full-width">
             <h3>Calculated Design Values</h3>
 
@@ -381,7 +387,7 @@ export function AngleBeamDesign() {
       </section>
 
       {/* Section 2: Design Calculations */}
-      {(selectedResult || optimalResult) && (
+      {(selectedResult || optimalResult) && calculatedLoads && (
         <section className="calculations-panel">
           <AngleDesignSummary
             result={selectedResult || optimalResult!}
@@ -390,8 +396,8 @@ export function AngleBeamDesign() {
             steelGrade={steelGrade}
             designAxis={designAxis}
             deflectionResult={calculatedLoads.deflectionResult}
-            span={designMode !== 'direct' ? span : undefined}
-            udlSLS={designMode === 'udl' ? udlSLS : calculatedLoads.nbcResult?.wSLS}
+            span={designMode !== 'direct' ? (span ?? undefined) : undefined}
+            udlSLS={designMode === 'udl' ? (udlSLS ?? undefined) : calculatedLoads.nbcResult?.wSLS}
           />
         </section>
       )}
